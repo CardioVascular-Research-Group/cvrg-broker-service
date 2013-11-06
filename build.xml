@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+
+<project name="cvrg-broker-service" basedir="." default="deployAllServices">
+	
+	<property name="projectName" value="nodeConversionService"/>
+	
+	<property name="liferay" value="/opt/liferay" />
+	<property name="liferay-sdk" value="${liferay}/liferay-plugins-sdk-6.1.1"/>
+	
+	<property file="${liferay-sdk}/build.${user.name}.properties" />
+	
+	<property name="portlet-ext" value="/opt/liferay/portlet-ext"/>
+	<property name="axis2deployFolder" value="${app.server.dir}/webapps/axis2/WEB-INF/services"/>
+
+	<property name="dependencies" value="${liferay}/projects-dependencies" />
+		
+	<path id="project-classpath">
+		<fileset dir="${dependencies}/${ant.project.name}-dependencies">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="copyDependenciesToServer">
+		<copy todir="${app.server.dir}/webapps/axis2/WEB-INF/lib">
+			<fileset dir="${dependencies}/${ant.project.name}-dependencies">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="cleanAll">
+		<echo>Clean the temporary area</echo>
+		<delete dir="build"/>
+	</target>
+	
+	<target name="compileService" depends="cleanAll">
+		
+		<echo>Create the temporary area</echo>
+		<mkdir dir="build"/>
+		<mkdir dir="build/class"/>
+		
+		<javac target="1.5" classpathref="project-classpath" srcdir="src" includes="edu/**/brokerSvcUtils/*" destdir="build/class" debug="true"/>
+		<javac target="1.5" classpathref="project-classpath" srcdir="src" includes="edu/**/${projectName}/*" destdir="build/class" debug="true"/>
+		
+		<jar destfile="Aar/${projectName}/${projectName}.aar" basedir="build/class">
+			<metainf dir="Aar/${projectName}/meta-inf" />
+			<include name="**/**"/>
+		</jar>
+		
+		<antcall target="cleanAll" />
+	</target>
+	
+	<target name="deployService">
+		
+		<copy todir="${axis2deployFolder}">
+			<fileset dir="Aar/${projectName}">
+				<include name="${projectName}.aar"/>
+			</fileset>
+		</copy>
+		<echo>Project ${projectName} deployed!</echo>
+		<echo>Please add the ${projectName}.aar reference on the ${axis2deployFolder}/services.list</echo>
+	</target>
+
+	
+	<target name="compileConversionService" depends="cleanAll">
+		<antcall target="compileService">
+			<param name="projectName" value="nodeConversionService"/>
+		</antcall>
+	</target>
+	
+	<target name="compileAnalysisService" depends="cleanAll">
+		<antcall target="compileService">
+			<param name="projectName" value="nodeAnalysisService"/>
+		</antcall>
+	</target>
+	
+	<target name="compileDataService" depends="cleanAll">
+		<antcall target="compileService">
+			<param name="projectName" value="nodeDataService"/>
+		</antcall>
+	</target>
+
+	<target name="compileRegistrationService" depends="cleanAll">
+		<antcall target="compileService">
+			<param name="projectName" value="nodeRegistrationService"/>
+		</antcall>
+	</target>
+	
+	<target name="deployConversionService" depends="compileConversionService">
+		<antcall target="deployService">
+			<param name="projectName" value="nodeConversionService"/>
+		</antcall>
+	</target>
+	
+	<target name="deployAnalysisService" depends="compileAnalysisService">
+		<antcall target="deployService">
+			<param name="projectName" value="nodeAnalysisService"/>
+		</antcall>
+	</target>
+	
+	<target name="deployDataService" depends="compileDataService">
+		<antcall target="deployService">
+			<param name="projectName" value="nodeDataService"/>
+		</antcall>
+	</target>
+
+	<target name="deployRegistrationService" depends="compileRegistrationService">
+		<antcall target="deployService">
+			<param name="projectName" value="nodeRegistrationService"/>
+		</antcall>
+	</target>
+	
+	<target name="compileAllServices">
+		<antcall target="compileAnalysisService" />
+		<antcall target="compileConversionService" />
+		<antcall target="compileDataService" />
+		<antcall target="compileRegistrationService" />
+	</target>
+	
+	<target name="deployAllServices">
+		<antcall target="deployAnalysisService" />
+		<antcall target="deployConversionService" />
+		<antcall target="deployDataService" />
+		<antcall target="deployRegistrationService" />
+	</target>
+	
+	
+	<target name="fullDeploy">
+		<ant antfile="../dbutility/build.xml" target="jar" inheritall="false"/>
+		<ant antfile="../waveform-utilities/build.xml" target="jar" inheritall="false"/>
+		<ant antfile="../waveform-annotations/build.xml" target="jar" inheritall="false"/>
+		
+		<ant antfile="../liferay-ws-client/build.xml" target="generateJarFiles" inheritall="false"/>
+		<ant antfile="../ZipHelper/build.xml" target="generateJarFiles" inheritall="false"/>
+		<ant antfile="../jsierraecg/build.xml" target="generateJarFiles" inheritall="false"/>
+		<ant antfile="../Phlilips1.04/build.xml" target="generateJarFiles" inheritall="false"/>
+		
+		<ant antfile="../ECG_Converter4/build.xml" target="generateJarFiles" inheritall="false"/>
+		
+		<ant antfile="../dbutility/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+		<ant antfile="../waveform-utilities/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+		<ant antfile="../waveform-annotations/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+		<ant antfile="../liferay-ws-client/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+		<ant antfile="../ECG_Converter4/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+		
+		<antcall target="deployAllServices"/>
+	</target>
+		
+</project>
