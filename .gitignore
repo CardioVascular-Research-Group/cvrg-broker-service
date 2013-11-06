@@ -4,5 +4,6 @@
 *.jar
 *.war
 *.ear
+*.aar
 /build
 /bin
