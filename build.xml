@@ -120,17 +120,11 @@
 	</target>
 	
 	<target name="compileAllServices">
-		<antcall target="compileAnalysisService" />
 		<antcall target="compileConversionService" />
-		<antcall target="compileDataService" />
-		<antcall target="compileRegistrationService" />
 	</target>
 	
 	<target name="deployAllServices">
-		<antcall target="deployAnalysisService" />
 		<antcall target="deployConversionService" />
-		<antcall target="deployDataService" />
-		<antcall target="deployRegistrationService" />
 	</target>
 	
 	

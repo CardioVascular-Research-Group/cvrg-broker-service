@@ -219,8 +219,7 @@ public class NodeAnalysis {
 	
 	public org.apache.axiom.om.OMElement runChesnokovAlgorithm(org.apache.axiom.om.OMElement param0) {
 		OMFactory fac = OMAbstractFactory.getOMFactory();
-        OMNamespace omNs = fac.createOMNamespace("http://www.cvrgrid.org/nodeAnalysisService/",
-        		"nodeAnalysisService");
+        OMNamespace omNs = fac.createOMNamespace("http://www.cvrgrid.org/nodeAnalysisService/", "nodeAnalysisService");
         OMElement chesnokovAlgorithmResults = fac.createOMElement("runChesnokovAlgorithm", omNs);
         Iterator iterator = param0.getChildren();
         String userId = ((OMElement)iterator.next()).getText();
@@ -296,7 +295,7 @@ public class NodeAnalysis {
         if(success){			
         	try {
 		        debugPrintln("calling chesnokovToCSV(chesnokovOutputFilename)");
-		        chesnokovCSVFilepath = chesnokovToCSV(chesnokovOutputFilePathXml, parentFolderNode + sep + local_datFile, datFile);
+		        chesnokovCSVFilepath = chesnokovToCSV(chesnokovOutputFilePathXml, datFilePath, datFile);
 		        debugPrintln("----------------------------");
         	}catch(Exception e) {
 				e.printStackTrace();
@@ -404,8 +403,7 @@ public class NodeAnalysis {
 		boolean temp_debugMode = debugMode;
 		// Parse the parameters received from the web page.
 		OMFactory fac = OMAbstractFactory.getOMFactory();
-        OMNamespace omNs = fac.createOMNamespace("http://www.cvrgrid.org/nodeAnalysisService/",
-        		"nodeAnalysisService");
+        OMNamespace omNs = fac.createOMNamespace("http://www.cvrgrid.org/nodeAnalysisService/","nodeAnalysisService");
         OMElement qRSscoreAlgorithmResults = fac.createOMElement("runQRSscoreAlgorithm", omNs);
         Iterator iterator = param0.getChildren();
         String userId = ((OMElement)iterator.next()).getText();
@@ -431,17 +429,14 @@ public class NodeAnalysis {
         //download the magellan file to the staging area
         try {
 	        ApacheCommonsFtpWrapper ftpClient = new ApacheCommonsFtpWrapper(ftpHost, ftpUser, ftpPassword);
-//	        ftpClient.binary();
 	        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-	        ftpClient.downloadFile(ftpIn, magellanFile,
-		    		parentFolderNode, magellanLocalTempFile);
+	        ftpClient.downloadFile(ftpIn, magellanFile,parentFolderNode, magellanLocalTempFile);
         }
         catch (Exception e) {
         	e.printStackTrace();
         }
         
-        String qRSscoreOutputFilename = magellanLocalTempFile.substring(0,
-        		magellanLocalTempFile.lastIndexOf(".")) + ".csv";
+        String qRSscoreOutputFilename = magellanLocalTempFile.substring(0,magellanLocalTempFile.lastIndexOf(".")) + ".csv";
         String qRSscoreOutputFull = parentFolderNode + sep + qRSscoreOutputFilename;
         if (debugMode) System.out.println("Local result file(qRSscoreOutputFull): " + qRSscoreOutputFull);
 
@@ -449,7 +444,6 @@ public class NodeAnalysis {
         // Execute the analysis 
         try {
 			FileToScore parser = new FileToScore(localFile, qRSscoreOutputFull, debugMode);
-//			parser.setVerbose(debugMode);
 			if (debugMode) System.out.println("");
 			if (debugMode) System.out.println("Done, input file contained " + parser.getLineCount() + " lines, " + parser.getDatasetCount() +  " datasets found and processed.");
 			if (debugMode) System.out.println("Number of each conduction types found:");
@@ -512,8 +506,7 @@ public class NodeAnalysis {
      *                  <root><stuff>Some stuff</stuff></root>
      * @return Document from an XML document represented as a String
      */
-    private static Document build(String xmlDocAsString) 
-            throws JDOMException {
+    private static Document build(String xmlDocAsString) throws JDOMException {
     	Document doc = null;
         SAXBuilder builder = new SAXBuilder();
         Reader stringreader = new StringReader(xmlDocAsString);

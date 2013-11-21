@@ -3,25 +3,20 @@ package edu.jhu.cvrg.services.nodeConversionService;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
-
-import javax.activation.DataHandler;
+import java.util.Map;
 
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
 import org.apache.axiom.om.OMNamespace;
-import org.apache.axiom.om.OMText;
 import org.apache.log4j.Logger;
 
-import edu.jhu.cvrg.services.brokerSvcUtils.BrokerProperties;
 import edu.jhu.cvrg.services.brokerSvcUtils.BrokerSvcUtils;
+import edu.jhu.cvrg.waveform.service.ServiceProperties;
+import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.cvrg.waveform.utility.MetaContainer;
 import edu.jhu.cvrg.waveform.utility.UploadUtility;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
@@ -29,7 +24,6 @@ import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 public class DataConversion {
 
 	private static final String SUCCESS = "SUCCESS";
-	private static final String SERVER_TEMP_IN_FOLDER = System.getProperty("java.io.tmpdir")+"/waveformFiles";
 	private String sep = File.separator;
 	
 	private boolean verbose = false;
@@ -186,20 +180,6 @@ public class DataConversion {
 		return convertFile(e, 
 						   ECGformatConverter.fileFormat.PHILIPS104,  
 						   ECGformatConverter.fileFormat.WFDB_16 );
-	}
-	
-	
-	private OMElement getAxisElement(OMElement e, String name){
-		for (Iterator iterator = e.getChildren(); iterator.hasNext();) {
-			Object type = (Object) iterator.next();
-			if(type instanceof OMElement){
-				OMElement node = (OMElement)type;
-				if(node.getLocalName().equalsIgnoreCase(name)){
-					return node;
-				}
-			}
-		}
-		return null;
 	}
 	
 	/** DataConversion service method to convert a Philips formatted XML file (Base64) to both WFDB and RDT formatted files.<BR/>
@@ -399,16 +379,18 @@ public class DataConversion {
 		log.debug("Service DataConversion.processUnZipDir() started.");
 		ECGformatConverter.fileFormat inputFormat, outputFormat1, outputFormat2;
 
-		MetaContainer metaData = getMetaData(param0);
+		Map<String, OMElement> params = ServiceUtils.extractParams(param0);
 		
-		verbose = Boolean.getBoolean(this.getAxisElement(param0, "verbose").getText());
+		MetaContainer metaData = getMetaData(params);
+		
+		verbose = Boolean.getBoolean(params.get("verbose").getText());
 		utils.setVerbose(verbose);
 		
-		long groupId = Long.valueOf(this.getAxisElement(param0, "groupId").getText()); 
-		long folderId = Long.valueOf(this.getAxisElement(param0, "folderId").getText());
+		long groupId = Long.valueOf(params.get("groupId").getText()); 
+		long folderId = Long.valueOf(params.get("folderId").getText());
 		
 		
-		String inputPath = SERVER_TEMP_IN_FOLDER + sep + metaData.getUserID();
+		String inputPath = ServiceUtils.SERVER_TEMP_CONVERSION_FOLDER + sep + metaData.getUserID();
 		
 		OMFactory fac = OMAbstractFactory.getOMFactory();
 		OMNamespace omNs = fac.createOMNamespace("http://www.example.org/nodeDataStagingService/","nodeDataStagingService");
@@ -594,30 +576,32 @@ public class DataConversion {
 	 */
 	private org.apache.axiom.om.OMElement convertFile(	org.apache.axiom.om.OMElement param0,	ECGformatConverter.fileFormat inputFormat, ECGformatConverter.fileFormat outputFormat) {
 		
-		MetaContainer metaData = getMetaData(param0);
+		Map<String, OMElement> params = ServiceUtils.extractParams(param0);
 		
-		verbose = Boolean.getBoolean(this.getAxisElement(param0, "verbose").getText());
-		long groupId = Long.valueOf(this.getAxisElement(param0, "groupId").getText()); 
-		long folderId = Long.valueOf(this.getAxisElement(param0, "folderId").getText());
+		MetaContainer metaData = getMetaData(params);
+		
+		verbose = Boolean.getBoolean(params.get("verbose").getText());
+		long groupId = Long.valueOf(params.get("groupId").getText()); 
+		long folderId = Long.valueOf(params.get("folderId").getText());
 		
 		
-		String inputPath = SERVER_TEMP_IN_FOLDER + sep + metaData.getUserID() + sep;
+		String inputPath = ServiceUtils.SERVER_TEMP_CONVERSION_FOLDER + sep + metaData.getUserID() + sep;
 		String headerFileName = null;
 		
 		if(inputFormat.equals(ECGformatConverter.fileFormat.WFDB)){
 			metaData.setFileName(metaData.getRecordName()+".dat");
-			createTempLocalFile(param0,"contentFile", metaData.getUserID(), inputPath, metaData.getFileName());
+			ServiceUtils.createTempLocalFile(params,"contentFile", inputPath, metaData.getFileName());
 			
 			headerFileName = metaData.getRecordName() + ".hea";
-			createTempLocalFile(param0,"headerFile", metaData.getUserID(), inputPath, headerFileName);	
+			ServiceUtils.createTempLocalFile(params,"headerFile", inputPath, headerFileName);	
 		}else{
-			createTempLocalFile(param0,"contentFile", metaData.getUserID(), inputPath, metaData.getFileName());	
+			ServiceUtils.createTempLocalFile(params,"contentFile", inputPath, metaData.getFileName());	
 		}
 		
 		log.info("passed verbose: " + verbose);
 		utils.setVerbose(verbose);
 		
-		BrokerProperties properties = BrokerProperties.getInstance();
+		ServiceProperties properties = ServiceProperties.getInstance();
 		UploadUtility utility = new UploadUtility(properties.getProperty("dbUser"),
 												  properties.getProperty("dbPassword"), 
 												  properties.getProperty("dbURI"),	
@@ -634,25 +618,25 @@ public class DataConversion {
 		
 		e.addChild(fac.createOMText(wfdbStatus));
 		
-		deleteFile(inputPath, metaData.getFileName());
+		ServiceUtils.deleteFile(inputPath, metaData.getFileName());
 		if(inputFormat.equals(ECGformatConverter.fileFormat.WFDB)){
-			deleteFile(inputPath, headerFileName);	
+			ServiceUtils.deleteFile(inputPath, headerFileName);	
 		}
 		
 		return e;
 	}
 
-	private MetaContainer getMetaData(OMElement param0) {
+	private MetaContainer getMetaData(Map<String, OMElement> params) {
 		
-		String userId = this.getAxisElement(param0, "userid").getText();
-		String subjectId = this.getAxisElement(param0, "subjectid").getText();
-		String inputFilename = this.getAxisElement(param0, "filename").getText();
-		String studyID = this.getAxisElement(param0, "studyID").getText();
-		String datatype = this.getAxisElement(param0, "datatype").getText();
-		String treePath = this.getAxisElement(param0, "treePath").getText();
-		String recordName = this.getAxisElement(param0, "recordName").getText();
-		int fileSize = Integer.valueOf(this.getAxisElement(param0, "fileSize").getText());
-		int fileFormat = Integer.valueOf(this.getAxisElement(param0, "fileFormat").getText());
+		String userId = params.get("userid").getText();
+		String subjectId = params.get("subjectid").getText();
+		String inputFilename = params.get("filename").getText();
+		String studyID = params.get("studyID").getText();
+		String datatype = params.get("datatype").getText();
+		String treePath = params.get("treePath").getText();
+		String recordName = params.get("recordName").getText();
+		int fileSize = Integer.valueOf(params.get("fileSize").getText());
+		int fileFormat = Integer.valueOf(params.get("fileFormat").getText());
 		
 		MetaContainer metaData = new MetaContainer(inputFilename, fileSize, fileFormat, subjectId, userId, recordName, datatype, studyID, treePath);
 		
@@ -664,49 +648,6 @@ public class DataConversion {
 		return metaData; 
 	}
 
-	private void deleteFile(String inputPath, String inputFilename) {
-		
-		File targetFile = new File(inputPath + sep + inputFilename);
-		targetFile.delete();
-		
-	}
-
-	private void createTempLocalFile(org.apache.axiom.om.OMElement param0, String tagName, String userId, String inputPath, String inputFilename) {
-		OMElement fileNode = this.getAxisElement(param0, tagName);
-		if(fileNode != null){
-			OMText binaryNode = (OMText) fileNode.getFirstOMChild();
-			DataHandler contentDH = (DataHandler) binaryNode.getDataHandler();
-			
-			File targetDirectory = new File(inputPath);
-			
-			File targetFile = new File(inputPath + sep + inputFilename);
-			
-			try {
-				targetDirectory.mkdirs();
-				
-				InputStream fileToSave = contentDH.getInputStream();
-				
-				OutputStream fOutStream = new FileOutputStream(targetFile);
-
-				int read = 0;
-				byte[] bytes = new byte[1024];
-
-				while ((read = fileToSave.read(bytes)) != -1) {
-					fOutStream.write(bytes, 0, read);
-				}
-
-				fileToSave.close();
-				fOutStream.flush();
-				fOutStream.close();
-				
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}finally{
-				log.info("File created? " + targetFile.exists());
-			}
-		}
-	}
-	
 	private String convertFileCommon(MetaContainer metaData,
 									 ECGformatConverter.fileFormat inputFormat,
 									 ECGformatConverter.fileFormat outputFormat, final String inputPath, long groupId, long folderId){
@@ -811,4 +752,6 @@ public class DataConversion {
 	private void debugPrintln(String out){
 			log.debug(" #DC3# " + out);
 	}
+	
+	
 }

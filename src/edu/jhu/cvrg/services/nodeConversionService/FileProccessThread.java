@@ -2,26 +2,15 @@ package edu.jhu.cvrg.services.nodeConversionService;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
-
-import javax.xml.rpc.ServiceException;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.cvrg.liferay.portal.kernel.repository.model.FileEntrySoap;
-import edu.jhu.cvrg.liferay.portal.service.ServiceContext;
-import edu.jhu.cvrg.liferay.portlet.documentlibrary.service.http.DLAppServiceSoap;
-import edu.jhu.cvrg.liferay.portlet.documentlibrary.service.http.DLAppServiceSoapServiceLocator;
-import edu.jhu.cvrg.liferay.portlet.documentlibrary.service.http.Portlet_DL_DLAppServiceSoapBindingStub;
-import edu.jhu.cvrg.services.brokerSvcUtils.BrokerProperties;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
 import edu.jhu.cvrg.waveform.model.AnnotationData;
+import edu.jhu.cvrg.waveform.service.ServiceProperties;
+import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.cvrg.waveform.utility.AnnotationUtility;
 import edu.jhu.cvrg.waveform.utility.MetaContainer;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
@@ -152,7 +141,7 @@ public class FileProccessThread extends Thread {
 			File orign = new File(inputPath + outputFileName);
 			FileInputStream fis = new FileInputStream(orign);
 			
-			sendToLiferay(groupId, folderId, inputPath, outputFileName, orign.length(), fis);
+			ServiceUtils.sendToLiferay(groupId, folderId, inputPath, outputFileName, orign.length(), fis);
 			
 			String name = inputFilename.substring(0, inputFilename.lastIndexOf(".")); // file name minus extension.
 
@@ -161,7 +150,7 @@ public class FileProccessThread extends Thread {
 				if (heaFile.exists()) {
 					orign = new File(inputPath + heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1));
 					fis = new FileInputStream(orign);
-					sendToLiferay(groupId, folderId, inputPath, heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1), orign.length(), fis);
+					ServiceUtils.sendToLiferay(groupId, folderId, inputPath, heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1), orign.length(), fis);
 				}
 			}
 			
@@ -173,56 +162,6 @@ public class FileProccessThread extends Thread {
 		return errorMessage;
 	}
 
-	
-	private boolean sendToLiferay(long groupId, long folderId, String outputPath, String fileName, long fileSize, InputStream fis){
-		
-		log.debug(" +++++ tranferring " + fileName + " to input directory " + inputPath);
-		
-		boolean ret = false;
-		
-		DLAppServiceSoapServiceLocator locator = new DLAppServiceSoapServiceLocator();
-		
-		try {
-			
-			BrokerProperties props = BrokerProperties.getInstance();
-			
-			DLAppServiceSoap service = locator.getPortlet_DL_DLAppService(new URL(props.getProperty("liferay.endpoint.url")));
-			
-			((Portlet_DL_DLAppServiceSoapBindingStub)service).setUsername(props.getProperty("liferay.ws.user"));
-			((Portlet_DL_DLAppServiceSoapBindingStub)service).setPassword(props.getProperty("liferay.ws.password"));
-			
-			byte[] bytes = new byte[Long.valueOf(fileSize).intValue()];
-			fis.read(bytes);
-			fis.close();
-			
-			FileEntrySoap file = service.addFileEntry(groupId, folderId, fileName, "", fileName, "", "1.0", bytes, new ServiceContext());
-			
-			ret = true;
-			
-			deleteFile(outputPath, fileName);
-			
-			log.debug(" +++++ Done tranferring ");
-			
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ServiceException e) {
-			e.printStackTrace();
-		}
-
-		return ret;
-	}
-	
-	private void deleteFile(String inputPath, String inputFilename) {
-		
-		File targetFile = new File(inputPath + sep + inputFilename);
-		targetFile.delete();
-		
-	}
-	
 	private void convertLeadAnnotations(ArrayList<AnnotationData[]> allLeadAnnotations) {
 		for(int i=0; i<allLeadAnnotations.size(); i++) {
 			if(allLeadAnnotations.get(i).length != 0) {
@@ -262,7 +201,7 @@ public class FileProccessThread extends Thread {
 
 
 	private AnnotationUtility getDbUtility() {
-		BrokerProperties properties = BrokerProperties.getInstance();
+		ServiceProperties properties = ServiceProperties.getInstance();
 		AnnotationUtility dbAnnUtility = new AnnotationUtility(properties.getProperty("dbUser"),
 															   properties.getProperty("dbPassword"), 
 															   properties.getProperty("dbURI"),	
