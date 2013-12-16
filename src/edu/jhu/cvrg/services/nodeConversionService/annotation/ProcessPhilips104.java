@@ -15,7 +15,9 @@ import org.cvrgrid.philips.jaxb.beans.Leadmeasurements;
 import org.cvrgrid.philips.jaxb.beans.Orderinfo;
 import org.cvrgrid.philips.jaxb.beans.Restingecgdata;
 
-import edu.jhu.cvrg.waveform.model.AnnotationData;
+import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+
+
 
 /**
  * This class will take the annotation data that has been gathered and put it into a form which complies

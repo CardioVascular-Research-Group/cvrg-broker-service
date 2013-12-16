@@ -15,7 +15,8 @@ import org.sierraecg.schema.Leadmeasurements;
 import org.sierraecg.schema.Orderinfo;
 import org.sierraecg.schema.Restingecgdata;
 
-import edu.jhu.cvrg.waveform.model.AnnotationData;
+import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+
 
 /**
  * This class will take the annotation data that has been gathered and put it into a form which complies
@@ -53,8 +54,7 @@ public class ProcessPhilips103 {
 		globalAnnotationsList = new ArrayList<AnnotationData>();
 		groupAnnotationsList = new ArrayList<AnnotationData[]>();
 		leadAnnotationsList = new ArrayList<AnnotationData[]>();
-		groupAnnotationsList = new ArrayList<AnnotationData[]>();
-		leadAnnotationsList = new ArrayList<AnnotationData[]>();
+		
 		studyID = newStudyID;
 		userID = newUserID;
 		recordName = newRecordName;

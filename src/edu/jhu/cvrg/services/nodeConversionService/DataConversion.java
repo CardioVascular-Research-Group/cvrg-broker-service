@@ -5,6 +5,7 @@ package edu.jhu.cvrg.services.nodeConversionService;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -14,11 +15,11 @@ import org.apache.axiom.om.OMFactory;
 import org.apache.axiom.om.OMNamespace;
 import org.apache.log4j.Logger;
 
+import edu.jhu.cvrg.dbapi.factory.Connection;
+import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
+import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
 import edu.jhu.cvrg.services.brokerSvcUtils.BrokerSvcUtils;
-import edu.jhu.cvrg.waveform.service.ServiceProperties;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
-import edu.jhu.cvrg.waveform.utility.MetaContainer;
-import edu.jhu.cvrg.waveform.utility.UploadUtility;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 
 public class DataConversion {
@@ -388,7 +389,16 @@ public class DataConversion {
 		
 		long groupId = Long.valueOf(params.get("groupId").getText()); 
 		long folderId = Long.valueOf(params.get("folderId").getText());
+		long companyId = Long.valueOf(params.get("companyId").getText());
 		
+		long[] filesId = null;
+		if(params.get("filesId").getText() != null){
+			String[] filesIdStr = params.get("filesId").getText().split(",");
+			filesId = new long[filesIdStr.length];
+			for (int i = 0; i < filesIdStr.length; i++) {
+				filesId[i] = Long.valueOf(filesIdStr[i]);
+			}
+		}
 		
 		String inputPath = ServiceUtils.SERVER_TEMP_CONVERSION_FOLDER + sep + metaData.getUserID();
 		
@@ -451,7 +461,7 @@ public class DataConversion {
 								wfdbStatus = convertFileCommon(metaData, 
 																inputFormat, 
 																outputFormat1,
-																inputPath, groupId, folderId);
+																inputPath, groupId, folderId, companyId, filesId);
 							}
 							else if (method.equals("wfdbToRDT")) { 
 								log.debug(".hea file found, calling wfdbToRDT()");
@@ -462,7 +472,7 @@ public class DataConversion {
 								wfdbStatus = convertFileCommon(metaData, 
 										inputFormat, 
 										outputFormat1,
-										inputPath, groupId, folderId);
+										inputPath, groupId, folderId, companyId, filesId);
 							}
 							else if (method.equals("wfdbToRDTData")) { 
 								debugPrintln("Processing/routing " + zipDirName  + subDirName + sep + "--" + dataFileName + " from zip file. ");
@@ -478,7 +488,7 @@ public class DataConversion {
 								wfdbStatus = convertFileCommon(metaData, 
 										inputFormat, 
 										outputFormat1,
-										inputPath, groupId, folderId);
+										inputPath, groupId, folderId, companyId, filesId);
 								
 								if (wfdbStatus.equalsIgnoreCase(SUCCESS))
 								{
@@ -487,7 +497,7 @@ public class DataConversion {
 									wfdbStatus = convertFileCommon(metaData, 
 											inputFormat, 
 											outputFormat2,
-											inputPath, groupId, folderId);
+											inputPath, groupId, folderId, companyId, filesId);
 								}
 	
 							}
@@ -501,7 +511,7 @@ public class DataConversion {
 								wfdbStatus = convertFileCommon(metaData, 
 										inputFormat, 
 										outputFormat1,
-										inputPath, groupId, folderId);
+										inputPath, groupId, folderId, companyId, filesId);
 								
 								if (wfdbStatus.equalsIgnoreCase(SUCCESS))
 								{
@@ -510,7 +520,7 @@ public class DataConversion {
 									wfdbStatus = convertFileCommon(metaData, 
 											inputFormat, 
 											outputFormat2,
-											inputPath, groupId, folderId);
+											inputPath, groupId, folderId, companyId, filesId);
 								}
 							}
 							else if (method.equals("xyFile")) { 
@@ -523,7 +533,7 @@ public class DataConversion {
 								wfdbStatus = convertFileCommon(metaData, 
 										inputFormat, 
 										outputFormat1,
-										inputPath, groupId, folderId);
+										inputPath, groupId, folderId, companyId, filesId);
 								
 								if (wfdbStatus.equalsIgnoreCase(SUCCESS))
 								{
@@ -532,7 +542,7 @@ public class DataConversion {
 									wfdbStatus = convertFileCommon(metaData, 
 											inputFormat, 
 											outputFormat2,
-											inputPath, groupId, folderId);
+											inputPath, groupId, folderId, companyId, filesId);
 								}
 							}else if (method.equals("na")) { 
 								wfdbStatus = SUCCESS;
@@ -583,6 +593,16 @@ public class DataConversion {
 		verbose = Boolean.getBoolean(params.get("verbose").getText());
 		long groupId = Long.valueOf(params.get("groupId").getText()); 
 		long folderId = Long.valueOf(params.get("folderId").getText());
+		long companyId = Long.valueOf(params.get("companyId").getText());
+		
+		long[] filesId = null;
+		if(params.get("filesId").getText() != null){
+			String[] filesIdStr = params.get("filesId").getText().split(",");
+			filesId = new long[filesIdStr.length];
+			for (int i = 0; i < filesIdStr.length; i++) {
+				filesId[i] = Long.valueOf(filesIdStr[i]);
+			}
+		}
 		
 		
 		String inputPath = ServiceUtils.SERVER_TEMP_CONVERSION_FOLDER + sep + metaData.getUserID() + sep;
@@ -601,16 +621,7 @@ public class DataConversion {
 		log.info("passed verbose: " + verbose);
 		utils.setVerbose(verbose);
 		
-		ServiceProperties properties = ServiceProperties.getInstance();
-		UploadUtility utility = new UploadUtility(properties.getProperty("dbUser"),
-												  properties.getProperty("dbPassword"), 
-												  properties.getProperty("dbURI"),	
-												  properties.getProperty("dbDriver"),
-												  properties.getProperty("dbMainDatabase"));
-		
-		utility.storeFileMetaData(metaData);
-		
-		String wfdbStatus = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId);
+		String wfdbStatus = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, filesId);
 		
 		OMFactory fac = OMAbstractFactory.getOMFactory();
 		OMNamespace omNs = fac.createOMNamespace("http://www.example.org/nodeConversionService/", "nodeConversionService");
@@ -650,7 +661,7 @@ public class DataConversion {
 
 	private String convertFileCommon(MetaContainer metaData,
 									 ECGformatConverter.fileFormat inputFormat,
-									 ECGformatConverter.fileFormat outputFormat, final String inputPath, long groupId, long folderId){
+									 ECGformatConverter.fileFormat outputFormat, final String inputPath, long groupId, long folderId, long companyId, long[] filesId){
 		
 		String wfdbStatus = "";
 		String errorMessage = "";
@@ -681,6 +692,8 @@ public class DataConversion {
 		debugPrintln(metaData.getFileName() + " this is the file sent to the converter ECGformatConverter()");
 		String recordName = metaData.getFileName().substring(0, metaData.getFileName().lastIndexOf(".")); // trim off the extension
 		
+		long docId = 0;
+		
 		try{
 			
 			boolean ret = conv.read(inputFormat, metaData.getFileName(), signalsRequested, inputPath, recordName);
@@ -695,6 +708,13 @@ public class DataConversion {
 			metaData.setNumberOfPoints(conv.getNumberOfPoints());
 
 			
+			Connection dbUtility = ConnectionFactory.createConnection();
+			
+			docId = dbUtility.storeDocument(Long.valueOf(metaData.getUserID()), groupId, companyId, metaData.getFileName(), metaData.getSubjectID(), String.valueOf(metaData.getFileFormat()), 
+											Double.valueOf(metaData.getSampFrequency()), metaData.getTreePath(), metaData.getChannels(), metaData.getNumberOfPoints(),
+											new GregorianCalendar(), metaData.getSubjectAge(), metaData.getSubjectGender(), null, conv.getAduGain(), metaData.getStudyID(), 
+											metaData.getFileSize(), metaData.getDatatype(), filesId);
+			
 		} catch (Exception ex) {
 			errorMessage = ex.toString();
 			wfdbStatus = "Error: " + errorMessage;
@@ -702,7 +722,7 @@ public class DataConversion {
 			return wfdbStatus;
 		}
 		
-		FileProccessThread newThread = new FileProccessThread(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, outputPath, conv, recordName);
+		FileProccessThread newThread = new FileProccessThread(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, outputPath, conv, recordName, docId, Long.valueOf(metaData.getUserID()));
 		
 		newThread.start();
 		

@@ -3,16 +3,21 @@ package edu.jhu.cvrg.services.nodeConversionService;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
+import edu.jhu.cvrg.dbapi.factory.Connection;
+import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
+import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
-import edu.jhu.cvrg.waveform.model.AnnotationData;
-import edu.jhu.cvrg.waveform.service.ServiceProperties;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
-import edu.jhu.cvrg.waveform.utility.AnnotationUtility;
-import edu.jhu.cvrg.waveform.utility.MetaContainer;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
 
@@ -25,28 +30,34 @@ public class FileProccessThread extends Thread {
 	private ECGformatConverter.fileFormat outputFormat; 
 	private String inputPath;
 	private long groupId;
+	private long companyId;
 	private long folderId;
 	private String outputPath;
 	private ECGformatConverter conv; 
 	private String recordName;
+	private Connection dbUtility;
+	private long docId;
+	private long userId;
 	
 	Logger log = Logger.getLogger(FileProccessThread.class);
 	
-	private AnnotationUtility dbAnnUtility;
-
 	public FileProccessThread(MetaContainer metaData, fileFormat inputFormat,	fileFormat outputFormat, String inputPath, 
-							  long groupId, long folderId, String outputPath, ECGformatConverter conv, String recordName) {
+							  long groupId, long folderId, long companyId, String outputPath, ECGformatConverter conv, String recordName, long docId, long userId) {
 		super();
 		this.metaData = metaData;
 		this.inputFormat = inputFormat;
 		this.outputFormat = outputFormat;
 		this.inputPath = inputPath;
 		this.groupId = groupId;
+		this.companyId = companyId;
 		this.folderId = folderId;
 		this.outputPath = outputPath;
 		this.conv = conv;
 		this.recordName = recordName;
 		this.setName(metaData.getUserID()+ " - " + recordName);
+		this.dbUtility = ConnectionFactory.createConnection();
+		this.docId = docId;
+		this.userId = userId;
 	}
 
 
@@ -69,13 +80,16 @@ public class FileProccessThread extends Thread {
 		
 		log.debug(" +++++ Conversion completed successfully, results will be transfered.");
 		
-		tranferFileToLiferay(outputFormat, inputFormat, metaData.getFileName(), inputPath, groupId, folderId);
+		tranferFileToLiferay(outputFormat, inputFormat, metaData.getFileName(), inputPath, groupId, folderId, docId, userId);
 		
 		intermediateEndTime = java.lang.System.currentTimeMillis();
 		conversionTimeElapsed = intermediateEndTime - backgroundProcessTime;
 		annotationTimeElapsed = java.lang.System.currentTimeMillis();
 		
-		dbAnnUtility = getDbUtility();
+		
+		ArrayList<AnnotationData> nonLeadList = new ArrayList<AnnotationData>();
+		ArrayList<AnnotationData[]> leadList = null;
+		
 		// Now do annotations from Muse or Philips files
 		if(fileFormat.PHILIPS103.equals(inputFormat)) {
 			
@@ -87,12 +101,12 @@ public class FileProccessThread extends Thread {
 			ArrayList<AnnotationData> orderList = phil103Ann.getOrderInfo();
 			ArrayList<AnnotationData> dataList = phil103Ann.getDataAcquisitions();
 			ArrayList<AnnotationData> globalList = phil103Ann.getGlobalAnnotations();
-			ArrayList<AnnotationData[]> leadList = phil103Ann.getLeadAnnotations();
 			
-			convertNonLeadAnnotations(globalList, "");
-			convertLeadAnnotations(leadList);
-			convertNonLeadAnnotations(orderList, "");
-			convertNonLeadAnnotations(dataList, "");
+			leadList = phil103Ann.getLeadAnnotations();
+			
+			nonLeadList.addAll(orderList);
+			nonLeadList.addAll(dataList);
+			nonLeadList.addAll(globalList);
 			
 		}else if(fileFormat.PHILIPS104.equals(inputFormat)) {
 			
@@ -104,14 +118,17 @@ public class FileProccessThread extends Thread {
 			ArrayList<AnnotationData> orderList = phil104Ann.getOrderInfo();
 			ArrayList<AnnotationData> dataList = phil104Ann.getDataAcquisitions();
 			ArrayList<AnnotationData> globalList = phil104Ann.getCrossleadAnnotations();
-			ArrayList<AnnotationData[]> leadList = phil104Ann.getLeadAnnotations();
 			
-			convertNonLeadAnnotations(globalList, "");
-			convertLeadAnnotations(leadList);
-			convertNonLeadAnnotations(orderList, "");
-			convertNonLeadAnnotations(dataList, "");
+			leadList = phil104Ann.getLeadAnnotations();
+			
+			nonLeadList.addAll(orderList);
+			nonLeadList.addAll(dataList);
+			nonLeadList.addAll(globalList);
+			
 		}
-		dbAnnUtility.close();
+		
+		convertLeadAnnotations(leadList);
+		convertNonLeadAnnotations(nonLeadList, "");
 		
 		intermediateEndTime = java.lang.System.currentTimeMillis();
 		annotationTimeElapsed = intermediateEndTime - annotationTimeElapsed;
@@ -123,7 +140,7 @@ public class FileProccessThread extends Thread {
 		
 	}
 	
-	private String tranferFileToLiferay(fileFormat outputFormat, fileFormat inputFormat, String inputFilename, String inputPath, long groupId, long folderId){
+	private String tranferFileToLiferay(fileFormat outputFormat, fileFormat inputFormat, String inputFilename, String inputPath, long groupId, long folderId, long docId, long userId){
 		String errorMessage="";
 		try {
 
@@ -141,18 +158,29 @@ public class FileProccessThread extends Thread {
 			File orign = new File(inputPath + outputFileName);
 			FileInputStream fis = new FileInputStream(orign);
 			
-			ServiceUtils.sendToLiferay(groupId, folderId, inputPath, outputFileName, orign.length(), fis);
+			long[] filesId = null; 
+			
+			Long fileId = ServiceUtils.sendToLiferay(groupId, folderId, userId, inputPath, outputFileName, orign.length(), fis);
 			
 			String name = inputFilename.substring(0, inputFilename.lastIndexOf(".")); // file name minus extension.
 
 			File heaFile = new File(inputPath + name + ".hea");
-			if (inputFormat != ECGformatConverter.fileFormat.WFDB) {
-				if (heaFile.exists()) {
-					orign = new File(inputPath + heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1));
-					fis = new FileInputStream(orign);
-					ServiceUtils.sendToLiferay(groupId, folderId, inputPath, heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1), orign.length(), fis);
-				}
+			if (inputFormat != ECGformatConverter.fileFormat.WFDB && heaFile.exists()) {
+				orign = new File(inputPath + heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1));
+				fis = new FileInputStream(orign);
+				
+				filesId = new long[2];
+				filesId[0] = fileId;
+				
+				fileId = ServiceUtils.sendToLiferay(groupId, folderId, userId, inputPath, heaFile.getName().substring(heaFile.getName().lastIndexOf(sep) + 1), orign.length(), fis);
+				filesId[1] = fileId;
+			
+			}else{
+				filesId = new long[1];
+				filesId[0] = fileId;
 			}
+			
+			dbUtility.storeFilesInfo(docId, filesId, null);
 			
 		} 
 		catch (Exception e) {
@@ -163,52 +191,44 @@ public class FileProccessThread extends Thread {
 	}
 
 	private void convertLeadAnnotations(ArrayList<AnnotationData[]> allLeadAnnotations) {
+		ArrayList<AnnotationData> list = new ArrayList<AnnotationData>();
 		for(int i=0; i<allLeadAnnotations.size(); i++) {
 			if(allLeadAnnotations.get(i).length != 0) {
 				log.debug("There are annotations in this lead.  The size is " + allLeadAnnotations.get(i).length);
-				convertAnnotations(allLeadAnnotations.get(i), true, "");
+				list.addAll(Arrays.asList(allLeadAnnotations.get(i)));
 			}
 		}
+		convertAnnotations(list, true, "");
 	}
 	
 	private void convertNonLeadAnnotations(ArrayList<AnnotationData> allAnnotations, String groupName){
-		AnnotationData[] annotationArray = new AnnotationData[allAnnotations.size()];
-		annotationArray = allAnnotations.toArray(annotationArray);
-		
-		convertAnnotations(annotationArray, false, groupName);
+		convertAnnotations(allAnnotations, false, groupName);
 	}
 	
-	private boolean convertAnnotations(AnnotationData[] annotationArray, boolean isLeadAnnotation, String groupName) {
+	private boolean convertAnnotations(ArrayList<AnnotationData> annotationArray, boolean isLeadAnnotation, String groupName) {
 		boolean success = true;
-		
+
+		Set<AnnotationDTO> annotationSet = new HashSet<AnnotationDTO>();
 		for(AnnotationData annData : annotationArray) {			
 			
-			
+			AnnotationDTO ann = null;
+			String type = null;
 			if(isLeadAnnotation) {
-				log.debug("Storing lead index " + annData.getLeadIndex());
-				success = dbAnnUtility.storeLeadAnnotationNode(annData);
-				
+				type = "ANNOTATION";
 			}else {
-				success = dbAnnUtility.storeComment(annData);
+				type = "COMMENT";
 			}
 			
-			if(!success){
-				break;	
-			}
+			ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), annData.getConceptID(), annData.getConceptRestURL(),
+					    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
+					    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
+			 
+			annotationSet.add(ann);
 		}
+		
+		success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+				
 		return success;
 	}
 
-
-	private AnnotationUtility getDbUtility() {
-		ServiceProperties properties = ServiceProperties.getInstance();
-		AnnotationUtility dbAnnUtility = new AnnotationUtility(properties.getProperty("dbUser"),
-															   properties.getProperty("dbPassword"), 
-															   properties.getProperty("dbURI"),	
-															   properties.getProperty("dbDriver"),
-															   properties.getProperty("dbMainDatabase"));
-
-		dbAnnUtility.initialize();
-		return dbAnnUtility;
-	}
 }
