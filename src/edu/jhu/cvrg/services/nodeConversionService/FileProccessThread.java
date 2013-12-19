@@ -192,10 +192,12 @@ public class FileProccessThread extends Thread {
 
 	private void convertLeadAnnotations(ArrayList<AnnotationData[]> allLeadAnnotations) {
 		ArrayList<AnnotationData> list = new ArrayList<AnnotationData>();
-		for(int i=0; i<allLeadAnnotations.size(); i++) {
-			if(allLeadAnnotations.get(i).length != 0) {
-				log.debug("There are annotations in this lead.  The size is " + allLeadAnnotations.get(i).length);
-				list.addAll(Arrays.asList(allLeadAnnotations.get(i)));
+		if(allLeadAnnotations != null){
+			for(int i=0; i<allLeadAnnotations.size(); i++) {
+				if(allLeadAnnotations.get(i).length != 0) {
+					log.debug("There are annotations in this lead.  The size is " + allLeadAnnotations.get(i).length);
+					list.addAll(Arrays.asList(allLeadAnnotations.get(i)));
+				}
 			}
 		}
 		convertAnnotations(list, true, "");
@@ -209,24 +211,26 @@ public class FileProccessThread extends Thread {
 		boolean success = true;
 
 		Set<AnnotationDTO> annotationSet = new HashSet<AnnotationDTO>();
-		for(AnnotationData annData : annotationArray) {			
-			
-			AnnotationDTO ann = null;
-			String type = null;
-			if(isLeadAnnotation) {
-				type = "ANNOTATION";
-			}else {
-				type = "COMMENT";
+		if(annotationArray != null && annotationArray.size() > 0){
+			for(AnnotationData annData : annotationArray) {			
+				
+				AnnotationDTO ann = null;
+				String type = null;
+				if(isLeadAnnotation) {
+					type = "ANNOTATION";
+				}else {
+					type = "COMMENT";
+				}
+				
+				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), annData.getConceptID(), annData.getConceptRestURL(),
+						    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
+						    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
+				 
+				annotationSet.add(ann);
 			}
 			
-			ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), annData.getConceptID(), annData.getConceptRestURL(),
-					    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
-					    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
-			 
-			annotationSet.add(ann);
+			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
 		}
-		
-		success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
 				
 		return success;
 	}
