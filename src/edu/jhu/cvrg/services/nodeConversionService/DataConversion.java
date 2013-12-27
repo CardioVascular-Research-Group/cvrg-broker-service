@@ -704,7 +704,7 @@ public class DataConversion {
 			}
 			
 			metaData.setSampFrequency(conv.getSamplingRate());
-			metaData.setChannels(conv.getAllocatedChannels());
+			metaData.setChannels(conv.getChannelCount());
 			metaData.setNumberOfPoints(conv.getNumberOfPoints());
 
 			
