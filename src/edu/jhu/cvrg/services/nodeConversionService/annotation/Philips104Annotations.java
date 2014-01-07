@@ -61,13 +61,19 @@ class Philips104Annotations {
 		
 		dataMappings.put("Database ID", dataAnnotations.getDatabaseid());
 		dataMappings.put("Modality", dataAnnotations.getModality());
-		dataMappings.put("Machine", dataAnnotations.getMachine());
+		if(dataAnnotations.getMachine() != null){
+			dataMappings.put("Machine", dataAnnotations.getMachine().getMachineid());
+		}
 		
 		// Now get the acquirer block in the XML
 		Acquirer acquirerAnn = dataAnnotations.getAcquirer(); 
 		
 		dataMappings.put("Acquirer Encounter ID", acquirerAnn.getEncounterid());
-		dataMappings.put("Operator", acquirerAnn.getOperator());
+		if(acquirerAnn.getOperator() != null){
+			dataMappings.put("Operator ID", acquirerAnn.getOperator().getId());
+			dataMappings.put("Operator Name", acquirerAnn.getOperator().getValue());
+		}
+		
 		dataMappings.put("Room", acquirerAnn.getRoom());
 		dataMappings.put("Bed", acquirerAnn.getBed());
 		dataMappings.put("Department ID", acquirerAnn.getDepartmentid());
@@ -76,11 +82,26 @@ class Philips104Annotations {
 		dataMappings.put("Institution Name", acquirerAnn.getInstitutionname());
 		dataMappings.put("Facility ID", acquirerAnn.getFacilityid());
 		dataMappings.put("Facility Name", acquirerAnn.getFacilityname());
-		dataMappings.put("Ordering Clinician", acquirerAnn.getOrderingclinician());
-		dataMappings.put("Fellow", acquirerAnn.getFellow());
-		dataMappings.put("Attending Clinician", acquirerAnn.getAttendingclinician());
-		dataMappings.put("Referring Clinician", acquirerAnn.getReferringclinician());
-		dataMappings.put("Consulting Clinician", acquirerAnn.getConsultingclinician());
+		if(acquirerAnn.getFellow() != null){
+			dataMappings.put("Ordering Clinician ID", acquirerAnn.getOrderingclinician().getId());
+			dataMappings.put("Ordering Clinician Name ", acquirerAnn.getOrderingclinician().getValue());
+		}
+		if(acquirerAnn.getFellow() != null){
+			dataMappings.put("Fellow ID", acquirerAnn.getFellow().getId());
+			dataMappings.put("Fellow Name", acquirerAnn.getFellow().getValue());
+		}
+		if(acquirerAnn.getAttendingclinician() != null){
+			dataMappings.put("Attending Clinician ID", acquirerAnn.getAttendingclinician().getId());
+			dataMappings.put("Attending Clinician Name", acquirerAnn.getAttendingclinician().getValue());
+		}
+		if(acquirerAnn.getReferringclinician() != null){
+			dataMappings.put("Referring Clinician ID", acquirerAnn.getReferringclinician().getId());
+			dataMappings.put("Referring Clinician Name", acquirerAnn.getReferringclinician().getValue());
+		}
+		if(acquirerAnn.getConsultingclinician() != null){
+			dataMappings.put("Consulting Clinician ID", acquirerAnn.getConsultingclinician().getId());
+			dataMappings.put("Consulting Clinician Name", acquirerAnn.getConsultingclinician().getValue());	
+		}
 		
 		// Retrieve the Signal Characteristics block.  The Sampling rate and number of channels
 		// information will not be gathered here, since those are being tracked elsewhere.
