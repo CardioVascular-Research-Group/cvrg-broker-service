@@ -621,13 +621,14 @@ public class DataConversion {
 		log.info("passed verbose: " + verbose);
 		utils.setVerbose(verbose);
 		
-		String wfdbStatus = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, filesId);
+		String errorMessage = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, filesId);
 		
 		OMFactory fac = OMAbstractFactory.getOMFactory();
 		OMNamespace omNs = fac.createOMNamespace("http://www.example.org/nodeConversionService/", "nodeConversionService");
 		OMElement e = fac.createOMElement("nodeConversionStatus", omNs);
 		
-		e.addChild(fac.createOMText(wfdbStatus));
+		
+		ServiceUtils.addOMEChild("errorMessage", errorMessage, e, fac, omNs);
 		
 		ServiceUtils.deleteFile(inputPath, metaData.getFileName());
 		if(inputFormat.equals(ECGformatConverter.fileFormat.WFDB)){
@@ -663,8 +664,7 @@ public class DataConversion {
 									 ECGformatConverter.fileFormat inputFormat,
 									 ECGformatConverter.fileFormat outputFormat, final String inputPath, long groupId, long folderId, long companyId, long[] filesId){
 		
-		String wfdbStatus = "";
-		String errorMessage = "";
+		String errorMessage = null;
 
 		
 		
@@ -681,10 +681,10 @@ public class DataConversion {
 		
 		// check that both files are available for WFDB conversion.
 		if(inputFormat == ECGformatConverter.fileFormat.WFDB){
-			wfdbStatus = checkWFDBcompleteness(inputPath, metaData.getUserID(), metaData.getFileName());
-			debugPrintln("checkWFDBcompleteness() returned: " + wfdbStatus);
-			if (wfdbStatus.length()>0){
-				return wfdbStatus;
+			errorMessage = checkWFDBcompleteness(inputPath, metaData.getUserID(), metaData.getFileName());
+			debugPrintln("checkWFDBcompleteness() returned: " + errorMessage);
+			if (errorMessage != null && errorMessage.length()>0){
+				return errorMessage;
 			}
 		}
 
@@ -699,8 +699,8 @@ public class DataConversion {
 			boolean ret = conv.read(inputFormat, metaData.getFileName(), signalsRequested, inputPath, recordName);
 			
 			if(!ret){
-				wfdbStatus = "Error: On File read.";
-				return  wfdbStatus;
+				errorMessage = "Error: On File read.";
+				return  errorMessage;
 			}
 			
 			metaData.setSampFrequency(conv.getSamplingRate());
@@ -716,17 +716,16 @@ public class DataConversion {
 											metaData.getFileSize(), metaData.getDatatype(), filesId);
 			
 		} catch (Exception ex) {
-			errorMessage = ex.toString();
-			wfdbStatus = "Error: " + errorMessage;
+			errorMessage = "Error: " + ex.toString();
 			ex.printStackTrace();
-			return wfdbStatus;
+			return errorMessage;
 		}
 		
 		FileProccessThread newThread = new FileProccessThread(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, outputPath, conv, recordName, docId, Long.valueOf(metaData.getUserID()));
 		
 		newThread.start();
 		
-		return wfdbStatus;
+		return errorMessage;
 	}
 
 	/** Checks whether the WFDB upload has all the needed files in the same directory.
