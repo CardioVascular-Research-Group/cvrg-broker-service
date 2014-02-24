@@ -222,9 +222,10 @@ public class FileProccessThread extends Thread {
 					type = "COMMENT";
 				}
 				
-				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), annData.getConceptID(), annData.getConceptRestURL(),
-						    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
-						    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
+				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), 
+										annData.getConceptID() != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY_ID : null, annData.getConceptID(), annData.getConceptRestURL(),
+									    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
+									    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
 				 
 				annotationSet.add(ann);
 			}
