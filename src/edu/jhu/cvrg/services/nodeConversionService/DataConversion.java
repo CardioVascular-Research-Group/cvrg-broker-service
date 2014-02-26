@@ -710,7 +710,7 @@ public class DataConversion {
 			
 			Connection dbUtility = ConnectionFactory.createConnection();
 			
-			docId = dbUtility.storeDocument(Long.valueOf(metaData.getUserID()), groupId, companyId, metaData.getFileName(), metaData.getSubjectID(), String.valueOf(metaData.getFileFormat()), 
+			docId = dbUtility.storeDocument(Long.valueOf(metaData.getUserID()), groupId, companyId, metaData.getFileName(), metaData.getSubjectID(), metaData.getFileFormat(), 
 											Double.valueOf(metaData.getSampFrequency()), metaData.getTreePath(), metaData.getChannels(), metaData.getNumberOfPoints(),
 											new GregorianCalendar(), metaData.getSubjectAge(), metaData.getSubjectGender(), null, conv.getAduGain(), metaData.getStudyID(), 
 											metaData.getFileSize(), metaData.getDatatype(), filesId);
