@@ -223,7 +223,7 @@ public class FileProccessThread extends Thread {
 				}
 				
 				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), 
-										annData.getConceptID() != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY_ID : null, annData.getConceptID(), annData.getConceptRestURL(),
+										annData.getConceptID() != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY : null, annData.getConceptID(), annData.getConceptRestURL(),
 									    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
 									    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
 				 
