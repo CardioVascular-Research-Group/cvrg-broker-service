@@ -6,15 +6,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.jdom.JDOMException;
 
 import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
 import edu.jhu.cvrg.dbapi.factory.Connection;
 import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
 import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
 import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
+import edu.jhu.cvrg.services.nodeConversionService.annotation.MuseAnnotationReader;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
@@ -90,6 +93,9 @@ public class FileProccessThread extends Thread {
 		ArrayList<AnnotationData> nonLeadList = new ArrayList<AnnotationData>();
 		ArrayList<AnnotationData[]> leadList = null;
 		
+		ArrayList<AnnotationDTO> nonLeadMuseAnnotations = new ArrayList<AnnotationDTO>();
+		LinkedHashMap<String,ArrayList<AnnotationDTO>> leadMuseAnnotations = new LinkedHashMap<String,ArrayList<AnnotationDTO>>(); 
+		
 		// Now do annotations from Muse or Philips files
 		if(fileFormat.PHILIPS103.equals(inputFormat)) {
 			
@@ -108,6 +114,7 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(dataList);
 			nonLeadList.addAll(globalList);
 			
+			
 		}else if(fileFormat.PHILIPS104.equals(inputFormat)) {
 			
 			org.cvrgrid.philips.jaxb.beans.Restingecgdata ecgData = (org.cvrgrid.philips.jaxb.beans.Restingecgdata) conv.getPhilipsRestingecgdata();
@@ -125,10 +132,39 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(dataList);
 			nonLeadList.addAll(globalList);
 			
+		}else if(fileFormat.MUSEXML.equals(inputFormat)) {
+			String rawMuseXML = conv.getMuseRawXML();
+
+			
+			if(rawMuseXML != null) {
+				MuseAnnotationReader museParser = new MuseAnnotationReader(rawMuseXML, metaData.getStudyID(), metaData.getUserID(), docId, metaData.getRecordName(), metaData.getSubjectID());
+				try {
+					museParser.parseAnnotations();
+					ArrayList<AnnotationDTO> restingECGList = museParser.getRestingECGMeasurements();
+					ArrayList<AnnotationDTO> waveformMeta = museParser.getWaveformNonLeadData();
+					
+					nonLeadMuseAnnotations.addAll(restingECGList);
+					nonLeadMuseAnnotations.addAll(waveformMeta);
+					
+					leadMuseAnnotations = museParser.getLeadAnnotations();
+				} catch (JDOMException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		
-		convertLeadAnnotations(leadList);
-		convertNonLeadAnnotations(nonLeadList, "");
+		// kept here for backwards compatibility with the Philips annotations, but the methods will be 
+		// phased out in the future and the Philips annotation processing will be redone
+		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat))) {
+			convertLeadAnnotations(leadList);
+			convertNonLeadAnnotations(nonLeadList, "");
+		}
+		// any other file formats from here on out should use this method instead
+		else {
+			commitAnnotations(nonLeadMuseAnnotations, "");
+			
+			commitLeadAnnotations(leadMuseAnnotations);
+		}
 		
 		intermediateEndTime = java.lang.System.currentTimeMillis();
 		annotationTimeElapsed = intermediateEndTime - annotationTimeElapsed;
@@ -189,7 +225,33 @@ public class FileProccessThread extends Thread {
 		}
 		return errorMessage;
 	}
+	
+	private void commitLeadAnnotations(LinkedHashMap<String, ArrayList<AnnotationDTO>> allLeadAnnotations) {
+		for(String key : allLeadAnnotations.keySet()) {
+			ArrayList<AnnotationDTO> list = allLeadAnnotations.get(key);
+			if(list != null && !(list.isEmpty())){
+				commitAnnotations(list, "");
+			}
+		}
+	}
+	
+	private boolean commitAnnotations(ArrayList<AnnotationDTO> annotationArray, String groupName) {
+		boolean success = true;
 
+		Set<AnnotationDTO> annotationSet = new HashSet<AnnotationDTO>();
+		if(annotationArray != null && annotationArray.size() > 0){
+			for(AnnotationDTO annData : annotationArray) {
+				 
+				annotationSet.add(annData);
+			}
+			
+			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+		}
+				
+		return success;
+	}	
+
+	@Deprecated
 	private void convertLeadAnnotations(ArrayList<AnnotationData[]> allLeadAnnotations) {
 		ArrayList<AnnotationData> list = new ArrayList<AnnotationData>();
 		if(allLeadAnnotations != null){
@@ -203,10 +265,12 @@ public class FileProccessThread extends Thread {
 		convertAnnotations(list, true, "");
 	}
 	
+	@Deprecated
 	private void convertNonLeadAnnotations(ArrayList<AnnotationData> allAnnotations, String groupName){
 		convertAnnotations(allAnnotations, false, groupName);
 	}
 	
+	@Deprecated
 	private boolean convertAnnotations(ArrayList<AnnotationData> annotationArray, boolean isLeadAnnotation, String groupName) {
 		boolean success = true;
 
