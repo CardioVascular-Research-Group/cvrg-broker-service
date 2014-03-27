@@ -621,14 +621,18 @@ public class DataConversion {
 		log.info("passed verbose: " + verbose);
 		utils.setVerbose(verbose);
 		
-		String errorMessage = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, filesId);
+		String returnString = convertFileCommon(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, filesId);
 		
 		OMFactory fac = OMAbstractFactory.getOMFactory();
 		OMNamespace omNs = fac.createOMNamespace("http://www.example.org/nodeConversionService/", "nodeConversionService");
 		OMElement e = fac.createOMElement("nodeConversionStatus", omNs);
 		
-		
-		ServiceUtils.addOMEChild("errorMessage", errorMessage, e, fac, omNs);
+		try{
+			long docId = Long.parseLong(returnString);
+			ServiceUtils.addOMEChild("documentId", String.valueOf(docId), e, fac, omNs);
+		}catch(NumberFormatException ex){
+			ServiceUtils.addOMEChild("errorMessage", returnString, e, fac, omNs);	
+		}
 		
 		ServiceUtils.deleteFile(inputPath, metaData.getFileName());
 		if(inputFormat.equals(ECGformatConverter.fileFormat.WFDB)){
@@ -714,6 +718,8 @@ public class DataConversion {
 											Double.valueOf(metaData.getSampFrequency()), metaData.getTreePath(), metaData.getChannels(), metaData.getNumberOfPoints(),
 											new GregorianCalendar(), metaData.getSubjectAge(), metaData.getSubjectGender(), null, conv.getAduGain(), metaData.getStudyID(), 
 											metaData.getFileSize(), metaData.getDatatype(), filesId);
+			
+			errorMessage = String.valueOf(docId);
 			
 		} catch (Exception ex) {
 			errorMessage = "Error: " + ex.toString();

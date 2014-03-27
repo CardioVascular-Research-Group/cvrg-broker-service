@@ -10,9 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.jdom.JDOMException;
 
 import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
+import edu.jhu.cvrg.dbapi.enums.EnumUploadState;
 import edu.jhu.cvrg.dbapi.factory.Connection;
 import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
 import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
@@ -42,6 +42,8 @@ public class FileProccessThread extends Thread {
 	private long docId;
 	private long userId;
 	
+	long writeTime = 0L;
+	
 	Logger log = Logger.getLogger(FileProccessThread.class);
 	
 	public FileProccessThread(MetaContainer metaData, fileFormat inputFormat,	fileFormat outputFormat, String inputPath, 
@@ -66,14 +68,17 @@ public class FileProccessThread extends Thread {
 
 	@Override
 	public void run() {
-		this.fileProccess();
+		try {
+			this.fileProccess();
+		} catch (Exception e) {
+			dbUtility.updateUploadStatus(docId, null, null, Boolean.FALSE, e.getMessage());
+		}
 	}
 	
 	
-	private void fileProccess() {
+	private void fileProccess() throws Exception{
 
-		long intermediateEndTime, annotationTimeElapsed, conversionTimeElapsed;
-		long backgroundProcessTime = java.lang.System.currentTimeMillis();
+		long writeTime = java.lang.System.currentTimeMillis();
 		
 		int rowsWritten;
 		
@@ -85,10 +90,15 @@ public class FileProccessThread extends Thread {
 		
 		tranferFileToLiferay(outputFormat, inputFormat, metaData.getFileName(), inputPath, groupId, folderId, docId, userId);
 		
-		intermediateEndTime = java.lang.System.currentTimeMillis();
-		conversionTimeElapsed = intermediateEndTime - backgroundProcessTime;
-		annotationTimeElapsed = java.lang.System.currentTimeMillis();
+		writeTime = java.lang.System.currentTimeMillis() - writeTime;
 		
+		log.info("["+docId+"]The runtime for writing the new file is = " + writeTime + " milliseconds");
+		
+		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
+		
+		dbUtility.updateUploadStatus(docId, EnumUploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
+		
+		long  annotationTime = java.lang.System.currentTimeMillis();
 		
 		ArrayList<AnnotationData> nonLeadList = new ArrayList<AnnotationData>();
 		ArrayList<AnnotationData[]> leadList = null;
@@ -138,18 +148,16 @@ public class FileProccessThread extends Thread {
 			
 			if(rawMuseXML != null) {
 				MuseAnnotationReader museParser = new MuseAnnotationReader(rawMuseXML, metaData.getStudyID(), metaData.getUserID(), docId, metaData.getRecordName(), metaData.getSubjectID());
-				try {
-					museParser.parseAnnotations();
-					ArrayList<AnnotationDTO> restingECGList = museParser.getRestingECGMeasurements();
-					ArrayList<AnnotationDTO> waveformMeta = museParser.getWaveformNonLeadData();
-					
-					nonLeadMuseAnnotations.addAll(restingECGList);
-					nonLeadMuseAnnotations.addAll(waveformMeta);
-					
-					leadMuseAnnotations = museParser.getLeadAnnotations();
-				} catch (JDOMException e) {
-					e.printStackTrace();
-				}
+				
+				museParser.parseAnnotations();
+				ArrayList<AnnotationDTO> restingECGList = museParser.getRestingECGMeasurements();
+				ArrayList<AnnotationDTO> waveformMeta = museParser.getWaveformNonLeadData();
+				
+				nonLeadMuseAnnotations.addAll(restingECGList);
+				nonLeadMuseAnnotations.addAll(waveformMeta);
+				
+				leadMuseAnnotations = museParser.getLeadAnnotations();
+			
 			}
 		}
 		
@@ -166,13 +174,10 @@ public class FileProccessThread extends Thread {
 			commitLeadAnnotations(leadMuseAnnotations);
 		}
 		
-		intermediateEndTime = java.lang.System.currentTimeMillis();
-		annotationTimeElapsed = intermediateEndTime - annotationTimeElapsed;
-		backgroundProcessTime = intermediateEndTime - backgroundProcessTime;
+		annotationTime = java.lang.System.currentTimeMillis() - annotationTime;
+		log.info("["+docId+"]The runtime for analyse annotation and entering it into the database is = " + annotationTime + " milliseconds");
+		dbUtility.updateUploadStatus(docId, EnumUploadState.ANNOTATION, annotationTime, Boolean.TRUE, null);
 		
-		log.info("The runtime for all background process is = " + backgroundProcessTime + " milliseconds");
-		log.info("The runtime for converting the data is = " + conversionTimeElapsed + " milliseconds");
-		log.info("The runtime for analyse data and entering it into the database is = " + annotationTimeElapsed + " milliseconds");
 		
 	}
 	
