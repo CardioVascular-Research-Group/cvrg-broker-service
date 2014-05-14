@@ -94,7 +94,7 @@ public class FileProccessThread extends Thread {
 		
 		log.info("["+docId+"]The runtime for writing the new file is = " + writeTime + " milliseconds");
 		
-		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
+		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat)  || fileFormat.SCHILLER.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
 		
 		dbUtility.updateUploadStatus(docId, EnumUploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
 		

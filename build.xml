@@ -137,6 +137,7 @@
 		<ant antfile="../ZipHelper/build.xml" target="generateJarFiles" inheritall="false"/>
 		<ant antfile="../jsierraecg/build.xml" target="generateJarFiles" inheritall="false"/>
 		<ant antfile="../Phlilips1.04/build.xml" target="generateJarFiles" inheritall="false"/>
+		<ant antfile="../schiller-data/build.xml" target="generateJarFiles" inheritall="false"/>
 		
 		<ant antfile="../ECG_Converter4/build.xml" target="generateJarFiles" inheritall="false"/>
 		
