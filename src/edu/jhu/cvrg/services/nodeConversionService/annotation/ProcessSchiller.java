@@ -231,7 +231,7 @@ public class ProcessSchiller {
 		if(globalAnnotations != null) {
 			LinkedHashMap<String, Object> annotationMappings = annotationRetriever.extractCrossleadElements(globalAnnotations);
 			
-			System.out.println("Size of hashmap = " + annotationMappings.size());
+			//System.out.println("Size of hashmap = " + annotationMappings.size());
 			
 			for(String key : annotationMappings.keySet()) {
 				if((annotationMappings.get(key) != null)) {
