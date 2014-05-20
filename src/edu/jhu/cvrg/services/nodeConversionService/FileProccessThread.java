@@ -20,6 +20,7 @@ import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.MuseAnnotationReader;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
+import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessSchiller;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
@@ -124,7 +125,7 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(dataList);
 			nonLeadList.addAll(globalList);
 			
-			
+
 		}else if(fileFormat.PHILIPS104.equals(inputFormat)) {
 			
 			org.cvrgrid.philips.jaxb.beans.Restingecgdata ecgData = (org.cvrgrid.philips.jaxb.beans.Restingecgdata) conv.getPhilipsRestingecgdata();
@@ -137,6 +138,22 @@ public class FileProccessThread extends Thread {
 			ArrayList<AnnotationData> globalList = phil104Ann.getCrossleadAnnotations();
 			
 			leadList = phil104Ann.getLeadAnnotations();
+			
+			nonLeadList.addAll(orderList);
+			nonLeadList.addAll(dataList);
+			nonLeadList.addAll(globalList);
+			
+		}else if(fileFormat.SCHILLER.equals(inputFormat)) {
+			
+			org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI ecgData = (org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI) conv.getComXiriuzSemaXmlSchillerEDISchillerEDI();
+			
+			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, metaData.getStudyID(), metaData.getUserID(), metaData.getRecordName(), metaData.getSubjectID());
+			schillerAnn.populateAnnotations();
+			ArrayList<AnnotationData> orderList = schillerAnn.getExamdescriptInfo();
+			ArrayList<AnnotationData> dataList = schillerAnn.getPatDataInfo();
+			ArrayList<AnnotationData> globalList = schillerAnn.getCrossleadAnnotations();
+			
+			leadList = schillerAnn.getLeadAnnotations();
 			
 			nonLeadList.addAll(orderList);
 			nonLeadList.addAll(dataList);
@@ -163,7 +180,7 @@ public class FileProccessThread extends Thread {
 		
 		// kept here for backwards compatibility with the Philips annotations, but the methods will be 
 		// phased out in the future and the Philips annotation processing will be redone
-		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat))) {
+		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat)) || (fileFormat.SCHILLER.equals(inputFormat))) {
 			convertLeadAnnotations(leadList);
 			convertNonLeadAnnotations(nonLeadList, "");
 		}
