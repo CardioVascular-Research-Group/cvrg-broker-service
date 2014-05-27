@@ -566,12 +566,12 @@ public class BrokerSvcUtils {
 
 
 	public void debugPrintLocalln(String text){
-		if(verbose)	log.debug("+ bSvcUtils: " + text);
+		if(verbose)	log.info("+ bSvcUtils: " + text);
 	}
 	public void debugPrintln(String text){
-		if(verbose)	log.debug("+ " + text);
+		if(verbose)	log.info("+ " + text);
 	}
 	public void debugPrint(String text){
-		if(verbose)	log.debug("+ " + text);
+		if(verbose)	log.info("+ " + text);
 	}
 }

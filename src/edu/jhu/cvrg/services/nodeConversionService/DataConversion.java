@@ -213,7 +213,7 @@ public class DataConversion {
 	 */
 	private org.apache.axiom.om.OMElement processUnZipDirOld(org.apache.axiom.om.OMElement param0)
 	{
-		log.debug("Service DataConversion.processUnZipDir() started.");
+		log.info("Service DataConversion.processUnZipDir() started.");
 		Iterator iterator = param0.getChildren();
 		String uId = ((OMElement)iterator.next()).getText();
 		String sId = ((OMElement)iterator.next()).getText();
@@ -377,7 +377,7 @@ public class DataConversion {
 	 */
 	private org.apache.axiom.om.OMElement processUnZipDir(org.apache.axiom.om.OMElement param0)
 	{
-		log.debug("Service DataConversion.processUnZipDir() started.");
+		log.info("Service DataConversion.processUnZipDir() started.");
 		ECGformatConverter.fileFormat inputFormat, outputFormat1, outputFormat2;
 
 		Map<String, OMElement> params = ServiceUtils.extractParams(param0);
@@ -464,7 +464,7 @@ public class DataConversion {
 																inputPath, groupId, folderId, companyId, filesId);
 							}
 							else if (method.equals("wfdbToRDT")) { 
-								log.debug(".hea file found, calling wfdbToRDT()");
+								log.info(".hea file found, calling wfdbToRDT()");
 	
 								inputFormat = ECGformatConverter.fileFormat.WFDB;
 								outputFormat1 = ECGformatConverter.fileFormat.RDT;
@@ -775,7 +775,7 @@ public class DataConversion {
 	 * @param out - String to be printed
 	 */
 	private void debugPrintln(String out){
-			log.debug(" #DC3# " + out);
+			log.info(" #DC3# " + out);
 	}
 	
 	

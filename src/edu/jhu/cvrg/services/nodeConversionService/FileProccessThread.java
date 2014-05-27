@@ -84,9 +84,9 @@ public class FileProccessThread extends Thread {
 		
 		rowsWritten = conv.write(outputFormat, outputPath, recordName);
 		
-		log.debug("rowsWritten: " + rowsWritten);
+		log.info("rowsWritten: " + rowsWritten);
 		
-		log.debug(" +++++ Conversion completed successfully, results will be transfered.");
+		log.info(" +++++ Conversion completed successfully, results will be transfered.");
 		
 		tranferFileToLiferay(outputFormat, inputFormat, metaData.getFileName(), inputPath, groupId, folderId, docId, userId);
 		
@@ -262,7 +262,7 @@ public class FileProccessThread extends Thread {
 		if(allLeadAnnotations != null){
 			for(int i=0; i<allLeadAnnotations.size(); i++) {
 				if(allLeadAnnotations.get(i).length != 0) {
-					log.debug("There are annotations in this lead.  The size is " + allLeadAnnotations.get(i).length);
+					log.info("There are annotations in this lead.  The size is " + allLeadAnnotations.get(i).length);
 					list.addAll(Arrays.asList(allLeadAnnotations.get(i)));
 				}
 			}

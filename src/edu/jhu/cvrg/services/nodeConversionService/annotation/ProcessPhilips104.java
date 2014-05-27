@@ -106,7 +106,7 @@ public class ProcessPhilips104 {
 		if(orderinfoAnn != null) {
 			LinkedHashMap<String, Object> orderMappings = annotationRetriever.extractOrderInfo(orderinfoAnn);
 			
-			log.debug("Size of hashmap = " + orderMappings.size());
+			log.info("Size of hashmap = " + orderMappings.size());
 			
 			for(String key : orderMappings.keySet()) {
 				if((orderMappings.get(key) != null)) {
@@ -140,7 +140,7 @@ public class ProcessPhilips104 {
 		//  This one is does not have a check for null since Data Acquisition is a required tag in the Schema
 		LinkedHashMap<String, Object> dataMappings = annotationRetriever.extractDataAcquisition(dataAcquisAnn);
 		
-		log.debug("Size of hashmap = " + dataMappings.size());
+		log.info("Size of hashmap = " + dataMappings.size());
 		
 		for(String key : dataMappings.keySet()) {
 			if((dataMappings.get(key) != null)) {
@@ -253,7 +253,7 @@ public class ProcessPhilips104 {
 				int arrayIndex = 0;
 				
 				for(String key : leadMappings.keySet()) {
-					log.debug("Annotation Name = " + key + " and value = " + leadMappings.get(key).toString());
+					log.info("Annotation Name = " + key + " and value = " + leadMappings.get(key).toString());
 					AnnotationData annData = new AnnotationData();
 					annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
 					annData.setIsSinglePoint(true);
