@@ -1,8 +1,14 @@
 package edu.jhu.cvrg.services.nodeConversionService.annotation;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Iterator;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -15,8 +21,9 @@ import org.cvrgrid.schiller.jaxb.beans.Wavedata;
 import org.cvrgrid.schiller.jaxb.beans.Channel;
 import org.cvrgrid.schiller.jaxb.beans.AnnotationGlobal;
 
-
-import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
+//import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+import edu.jhu.cvrg.waveform.utility.WebServiceUtility;
 
 /**
  * This class will take the annotation data that has been gathered and put it into a form which complies
@@ -25,37 +32,38 @@ import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
  * @author bbenite1
  *
  */
+
 public class ProcessSchiller {
 	private ComXiriuzSemaXmlSchillerEDISchillerEDI comxiriuzsemaxmlschilleredischilleredi;
-	private ArrayList<AnnotationData> examdescriptList;
-	private ArrayList<AnnotationData> patdataList;
-	private ArrayList<AnnotationData> crossleadAnnotationsList;
-	private ArrayList<AnnotationData[]> groupAnnotationsList;
-	private ArrayList<AnnotationData[]> leadAnnotationsList;
+	private ArrayList<AnnotationDTO> examdescriptList;
+	private ArrayList<AnnotationDTO> patdataList;
+	private ArrayList<AnnotationDTO> crossleadAnnotationsList;
+	private ArrayList<AnnotationDTO[]> groupAnnotationsList;
+	private LinkedHashMap<String, ArrayList<AnnotationDTO>> leadAnnotationsList;
 	private SchillerAnnotations annotationRetriever;
 	private String studyID;
-	private String userID;
+	private long userID;
+	private long docID;
 	private String recordName;
 	private String subjectID;
 	private final String createdBy = "Schiller Upload";
 	
 	private Logger log = Logger.getLogger(ProcessSchiller.class);
 	
-	public ProcessSchiller(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG, String newStudyID, String newUserID, String newRecordName, String newSubjectID) {
+	public ProcessSchiller(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG, String newStudyID, long newUserID, long newDocID, String newRecordName, String newSubjectID) {
 		comxiriuzsemaxmlschilleredischilleredi = newECG;
 		annotationRetriever = new SchillerAnnotations();
-		examdescriptList = new ArrayList<AnnotationData>();
-		patdataList = new ArrayList<AnnotationData>();
-		crossleadAnnotationsList = new ArrayList<AnnotationData>();
-		groupAnnotationsList = new ArrayList<AnnotationData[]>();
-		leadAnnotationsList = new ArrayList<AnnotationData[]>();
-		studyID = newStudyID;  //metadata
-		userID = newUserID;  //metadata
-		recordName = newRecordName;  //metadata
-		subjectID = newSubjectID;  //metadata
-		
+		examdescriptList = new ArrayList<AnnotationDTO>();
+		patdataList = new ArrayList<AnnotationDTO>();
+		crossleadAnnotationsList = new ArrayList<AnnotationDTO>();
+		groupAnnotationsList = new ArrayList<AnnotationDTO[]>();
+		leadAnnotationsList = new LinkedHashMap<String, ArrayList<AnnotationDTO>>();
+		studyID = newStudyID;
+		userID = newUserID;
+		docID = newDocID;
+		recordName = newRecordName;
+		subjectID = newSubjectID;
 	}
-
 
 	public void setComXiriuzSemaXmlSchillerEDISchillerEDI(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG) {
 		comxiriuzsemaxmlschilleredischilleredi = newECG;
@@ -65,23 +73,23 @@ public class ProcessSchiller {
 		return comxiriuzsemaxmlschilleredischilleredi;
 	}
 	
-	public ArrayList<AnnotationData> getExamdescriptInfo() {
+	public ArrayList<AnnotationDTO> getExamdescriptInfo() {
 		return examdescriptList;
 	}
 	
-	public ArrayList<AnnotationData> getPatDataInfo() {
+	public ArrayList<AnnotationDTO> getPatDataInfo() {
 		return patdataList;
 	}
 	
-	public ArrayList<AnnotationData> getCrossleadAnnotations() {
+	public ArrayList<AnnotationDTO> getCrossleadAnnotations() {
 		return crossleadAnnotationsList;
 	}
 	
-	public ArrayList<AnnotationData[]> getGroupAnnotations() {
+	public ArrayList<AnnotationDTO[]> getGroupAnnotations() {
 		return groupAnnotationsList;
 	}
 	
-	public ArrayList<AnnotationData[]> getLeadAnnotations() {
+	public LinkedHashMap<String, ArrayList<AnnotationDTO>> getLeadAnnotations() {
 		return leadAnnotationsList;
 	}
 	
@@ -98,72 +106,58 @@ public class ProcessSchiller {
 			this.processLeadAnnotations();
 		}*/
 	}
-	
-	
-	
-	@SuppressWarnings("deprecation")
+
 	private void extractExamdescript() {
 		Examdescript examdescriptAnn = comxiriuzsemaxmlschilleredischilleredi.getExamdescript();
 		
 		if(examdescriptAnn != null) {
 			LinkedHashMap<String, Object> orderMappings = annotationRetriever.extractExamdescript(examdescriptAnn);
 			
-			log.debug("Size of hashmap = " + orderMappings.size());
+			String annType = "COMMENT";
+    		log.debug("Size of hashmap = " + orderMappings.size());
 			
 			for(String key : orderMappings.keySet()) {
 				if((orderMappings.get(key) != null)) {
-					AnnotationData annData = new AnnotationData();
-					annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
-					annData.setIsSinglePoint(true);
-					annData.setStudyID(studyID);
-					annData.setSubjectID(subjectID);
-					annData.setUserID(userID);
-					annData.setDatasetName(recordName);
-					annData.setAnnotation(orderMappings.get(key).toString());
-					annData.setConceptLabel(key);
-					annData.setCreator(createdBy);
 					
-					Random randomNum = new Random();
-					
-					long randomID = java.lang.System.currentTimeMillis() * (long)randomNum.nextInt(10000);
-					String ms = String.valueOf(randomID);  // used for GUID
-					annData.setUniqueID(ms);
-					//System.out.println(annData.getSubjectID() + " - subject id");
+					AnnotationDTO annData = new AnnotationDTO();
+					annData.setNewStudyID(studyID);
+					annData.setNewSubjectID(subjectID);
+					annData.setUserID(Long.valueOf(userID));
+					annData.setRecordID(docID);
+					annData.setNewRecordName(recordName);
+					annData.setValue(orderMappings.get(key).toString());
+					annData.setName(key);
+					annData.setCreatedBy(createdBy);
+					annData.setAnnotationType(annType);
+					annData.setTimestamp(new GregorianCalendar());
 					
 					examdescriptList.add(annData);
 				}
 			}
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	private void extractPatdata() {
 		Patdata patdataAnn = comxiriuzsemaxmlschilleredischilleredi.getPatdata();
 		
 		if(patdataAnn != null) {
 			LinkedHashMap<String, Object> orderMappings = annotationRetriever.extractPatdata(patdataAnn);
-			
-			log.debug("Size of hashmap = " + orderMappings.size());
+			String annType = "COMMENT";
+    		log.debug("Size of hashmap = " + orderMappings.size());
 			
 			for(String key : orderMappings.keySet()) {
 				if((orderMappings.get(key) != null)) {
-					AnnotationData annData = new AnnotationData();
-					annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
-					annData.setIsSinglePoint(true);
-					annData.setStudyID(studyID);
-					annData.setSubjectID(subjectID);
-					annData.setUserID(userID);
-					annData.setDatasetName(recordName);
-					annData.setAnnotation(orderMappings.get(key).toString());
-					annData.setConceptLabel(key);
-					annData.setCreator(createdBy);
-					
-					Random randomNum = new Random();
-					
-					long randomID = java.lang.System.currentTimeMillis() * (long)randomNum.nextInt(10000);
-					String ms = String.valueOf(randomID);  // used for GUID
-					annData.setUniqueID(ms);
-					//System.out.println(orderMappings.get(key).toString() + " - key name" + key + " - key value");
+					AnnotationDTO annData = new AnnotationDTO();
+					annData.setNewStudyID(studyID);
+					annData.setNewSubjectID(subjectID);
+					annData.setUserID(Long.valueOf(userID));
+					annData.setRecordID(docID);
+					annData.setNewRecordName(recordName);
+					annData.setValue(orderMappings.get(key).toString());
+					annData.setName(key);
+					annData.setCreatedBy(createdBy);
+					annData.setAnnotationType(annType);
+					annData.setTimestamp(new GregorianCalendar());
 					
 					patdataList.add(annData);
 				}
@@ -171,135 +165,134 @@ public class ProcessSchiller {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private void processLeadAnnotations() {
 		Event allLeadAnnotations = comxiriuzsemaxmlschilleredischilleredi.getEventdata().getEvent();
 		
 		if(allLeadAnnotations != null) {
 			List<Wavedata> leadAnnotationGroup = allLeadAnnotations.getWavedata();
 			
-			int leadIndex = 0;
-			
+			// iterate through multiple wavedata elements within file
 			for(Wavedata annotation: leadAnnotationGroup) {
 
 				if (annotation.getType().equalsIgnoreCase("ecg_averages")){	
 					List<Channel> channel = annotation.getChannel();
+		    		Integer leadIndex = null;
+		    		
+		    		//iterate through multiple channels within wavedata element
 			    	for (Channel subChannel : channel) {
-				
-						LinkedHashMap<String, Object> leadMappings = annotationRetriever.extractLeadMeasurements(subChannel);
-						AnnotationData[] annotationsToAdd = new AnnotationData[leadMappings.size()];
+						String leadValue = subChannel.getName();
 						
-						int arrayIndex = 0;
-						
-						for(String key : leadMappings.keySet()) {
-							//log.debug("Annotation Name = " + key + " and value = " + leadMappings.get(key).toString());
-							AnnotationData annData = new AnnotationData();
-							annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
-							annData.setIsSinglePoint(true);
-							annData.setStudyID(studyID);
-							annData.setSubjectID(subjectID);
-							annData.setUserID(userID);
-							annData.setDatasetName(recordName);
-							annData.setAnnotation(leadMappings.get(key).toString());
-							annData.setConceptLabel(key);
-							annData.setCreator(createdBy);
-							annData.setLeadIndex(leadIndex);
-							
-							Random randomNum = new Random();
-							
-							long randomID = java.lang.System.currentTimeMillis() * (long)randomNum.nextInt(10000);
-							String ms = String.valueOf(randomID);  // used for GUID
-							annData.setUniqueID(ms);
-							
-							annotationsToAdd[arrayIndex] = annData;
-							
-							arrayIndex++;
+						leadIndex = containsEnum(leadValue);
+						if (leadIndex == 20){
+							leadIndex = null;
 						}
-					
-						leadAnnotationsList.add(annotationsToAdd);
-						leadIndex++;
+						
+						String annType = "ANNOTATION";
+						
+			    		LinkedHashMap<String, Object> leadMappings = annotationRetriever.extractLeadMeasurements(subChannel);
+			    		
+			    		ArrayList<AnnotationDTO> annotationsToAdd = new ArrayList<AnnotationDTO>();
+
+						for(String key : leadMappings.keySet()) {
+
+							String conceptId = "";
+							String fullAnnotation = "";
+							String prefLabel = "";
+							
+							AnnotationDTO annData = new AnnotationDTO(Long.valueOf(userID), 0L, 0L, docID, createdBy, annType, prefLabel, 
+									 conceptId != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY : null , conceptId,
+									 null, leadIndex, null, null, fullAnnotation , Calendar.getInstance(), 
+									 null, null, null, null, studyID, recordName, subjectID);
+							
+							// TODO:  A lookup table should be used instead of this, but for now this will do since
+							// we only have a few Muse annotations that have matching Bioportal terms
+							if(key.equals("PR_Interval")){
+								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000341"; 
+							}else if(key.equals("QT_Interval")){
+								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000682"; 
+							}else if(key.equals("QT_Corrected")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000701";
+							}else if(key.equals("QT_Corrected_Fridericias_Formula")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000040";
+							}else if(key.equals("Q_Wave_Duration")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000551";
+							}else if(key.equals("Q_Wave_Amplitude")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000652";
+							}else if(key.equals("R_Wave_Amplitude")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000750";
+							}else if(key.equals("R_Wave_Duration")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000597";
+							}else if(key.equals("S_Wave_Amplitude")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000107";
+							}else if(key.equals("S_Wave_Duration")) {
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000491";
+							}
+							
+							annData.setNewStudyID(studyID);
+							annData.setNewSubjectID(subjectID);
+							annData.setUserID(Long.valueOf(userID));
+							annData.setRecordID(docID);
+							annData.setNewRecordName(recordName);
+							annData.setValue(leadMappings.get(key).toString());
+							annData.setName(key);
+							annData.setCreatedBy(createdBy);
+							annData.setBioportalReferenceLink(conceptId);
+							annData.setTimestamp(new GregorianCalendar());
+							
+							annotationsToAdd.add(annData);
+							
+						}
+						leadAnnotationsList.put(Integer.toString(leadIndex), annotationsToAdd);
 			    	}
-					
 				}
 			}			
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	private void processCrossleadAnnotations() {
 		Event globalAnnotations = comxiriuzsemaxmlschilleredischilleredi.getEventdata().getEvent();
 		if(globalAnnotations != null) {
 			LinkedHashMap<String, Object> annotationMappings = annotationRetriever.extractCrossleadElements(globalAnnotations);
-			
-			//System.out.println("Size of hashmap = " + annotationMappings.size());
-			
-			for(String key : annotationMappings.keySet()) {
-				if((annotationMappings.get(key) != null)) {
-					AnnotationData annData = new AnnotationData();
-					annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
-					annData.setIsSinglePoint(true);
-					annData.setStudyID(studyID);
-					annData.setSubjectID(subjectID);
-					annData.setUserID(userID);
-					annData.setDatasetName(recordName);
-					annData.setAnnotation(annotationMappings.get(key).toString());
-					annData.setConceptLabel(key);
-					annData.setCreator(createdBy);
-					
-					Random randomNum = new Random();
-					
-					long randomID = java.lang.System.currentTimeMillis() * (long)randomNum.nextInt(10000);
-					String ms = String.valueOf(randomID);  // used for GUID
-					annData.setUniqueID(ms);
-					//System.out.println(orderMappings.get(key).toString() + " - key name" + key + " - key value");
+			String annType = "Global Annotation";
 
-					//crossleadAnnotationsList.add(annData);
+			// iterate through multiple annotation_global elements within file
+    		for(String key : annotationMappings.keySet()) {
+				if((annotationMappings.get(key) != null)) {
+					
+					String conceptId = "";
+					if(key.equals("QRS_Wave_Duration")){
+						conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000072"; 
+					}else if(key.equals("QT_Interval")){
+						conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000682"; 
+					}
+					
+					AnnotationDTO annData = new AnnotationDTO();
+					annData.setNewStudyID(studyID);
+					annData.setNewSubjectID(subjectID);
+					annData.setUserID(Long.valueOf(userID));
+					annData.setRecordID(docID);
+					annData.setNewRecordName(recordName);
+					annData.setValue(annotationMappings.get(key).toString());
+					annData.setName(key);
+					annData.setCreatedBy(createdBy);
+					annData.setBioportalReferenceLink(conceptId);
+					annData.setAnnotationType(annType);
+					annData.setTimestamp(new GregorianCalendar());
+					
 					crossleadAnnotationsList.add(annData);
 				}	
 			}	
 		}
-	}
-	
-	/*private void processGroupAnnotations() {
-		Groupmeasurements allGroupAnnotations = comxiriuzsemaxmlschilleredischilleredi.getInternalmeasurements().getGroupmeasurements();
-		
-		if(allGroupAnnotations != null) {
-			List<Groupmeasurement> groupAnnotation = allGroupAnnotations.getGroupmeasurement();
-			
-			for(Groupmeasurement annotation : groupAnnotation) {
-				LinkedHashMap<String, Object> groupMappings = annotationRetriever.extractGroupMeasurements(annotation);
-				AnnotationData[] annotationsToAdd = new AnnotationData[groupMappings.size()];
-				int index = 0;
-				
-				for(String key : groupMappings.keySet()) {
-					AnnotationData annData = new AnnotationData();
-					annData.setIsComment(true); // TODO:  Rename this to isNonLeadAnnotation instead
-					annData.setIsSinglePoint(true);
-					annData.setStudyID(studyID);
-					annData.setSubjectID(subjectID);
-					annData.setUserID(userID);
-					annData.setDatasetName(recordName);
-					annData.setAnnotation(groupMappings.get(key).toString());
-					annData.setConceptLabel(key);
-					annData.setCreator(createdBy);
-					
-					Random randomNum = new Random();
-					
-					long randomID = java.lang.System.currentTimeMillis() * (long)randomNum.nextInt(10000);
-					String ms = String.valueOf(randomID);  // used for GUID
-					annData.setUniqueID(ms);
-					
-					
-					annotationsToAdd[index] = annData;
-					
-					index++;
-				}
-				
-				groupAnnotationsList.add(annotationsToAdd);
+	}	
+	public static int containsEnum(String test) {
+		int i = 0;
+		for (LeadEnum l : LeadEnum.values()){
+			if (l.name().equalsIgnoreCase(test)){
+				return i;
 			}
+			i++;
 		}
+		i=20;    // can't nullify the int b/c method can't return null so assign it here and nullify it once it's returned.
+		return i;
 	}
-	
-	}*/
-	
 }
