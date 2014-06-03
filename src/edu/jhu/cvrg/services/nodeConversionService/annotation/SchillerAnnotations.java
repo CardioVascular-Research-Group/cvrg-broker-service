@@ -66,7 +66,7 @@ class SchillerAnnotations {
 			if(schilAnoName.equals("AXIS_QRS")) {
 				ecgOntoName = "QRS_Axis";
 			}else if(schilAnoName.equals("QRS")) {
-				ecgOntoName = "QRS_Duration";
+				ecgOntoName = "QRS_Wave_Duration";
 			/*}else if(schilAnoName.equals("HR")) {
 				ecgOntoName = "";
 			}else if(schilAnoName.equals("RR")) {

@@ -144,20 +144,20 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(globalList);
 			
 		}else if(fileFormat.SCHILLER.equals(inputFormat)) {
-			
+			                                               
 			org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI ecgData = (org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI) conv.getComXiriuzSemaXmlSchillerEDISchillerEDI();
 			
-			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, metaData.getStudyID(), metaData.getUserID(), metaData.getRecordName(), metaData.getSubjectID());
+			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, metaData.getStudyID(), Long.valueOf(metaData.getUserID()), docId, metaData.getRecordName(), metaData.getSubjectID());
 			schillerAnn.populateAnnotations();
-			ArrayList<AnnotationData> orderList = schillerAnn.getExamdescriptInfo();
-			ArrayList<AnnotationData> dataList = schillerAnn.getPatDataInfo();
-			ArrayList<AnnotationData> globalList = schillerAnn.getCrossleadAnnotations();
+			ArrayList<AnnotationDTO> orderList = schillerAnn.getExamdescriptInfo();
+			ArrayList<AnnotationDTO> dataList = schillerAnn.getPatDataInfo();
+			ArrayList<AnnotationDTO> globalList = schillerAnn.getCrossleadAnnotations();
 			
-			leadList = schillerAnn.getLeadAnnotations();
+			leadMuseAnnotations = schillerAnn.getLeadAnnotations();
 			
-			nonLeadList.addAll(orderList);
-			nonLeadList.addAll(dataList);
-			nonLeadList.addAll(globalList);
+			nonLeadMuseAnnotations.addAll(orderList);
+			nonLeadMuseAnnotations.addAll(dataList);
+			nonLeadMuseAnnotations.addAll(globalList);
 			
 		}else if(fileFormat.MUSEXML.equals(inputFormat)) {
 			String rawMuseXML = conv.getMuseRawXML();
@@ -180,7 +180,7 @@ public class FileProccessThread extends Thread {
 		
 		// kept here for backwards compatibility with the Philips annotations, but the methods will be 
 		// phased out in the future and the Philips annotation processing will be redone
-		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat)) || (fileFormat.SCHILLER.equals(inputFormat))) {
+		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat)) ) {
 			convertLeadAnnotations(leadList);
 			convertNonLeadAnnotations(nonLeadList, "");
 		}
@@ -266,7 +266,6 @@ public class FileProccessThread extends Thread {
 				 
 				annotationSet.add(annData);
 			}
-			
 			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
 		}
 				
