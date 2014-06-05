@@ -64,7 +64,7 @@ class SchillerAnnotations {
 			String schilAnoName = anGloAnnot.getName();
 			String ecgOntoName = "";
 			if(schilAnoName.equals("AXIS_QRS")) {
-				ecgOntoName = "QRS_Axis";
+				ecgOntoName = "QRS_Wave_Complex_Axis";
 			}else if(schilAnoName.equals("QRS")) {
 				ecgOntoName = "QRS_Wave_Duration";
 			/*}else if(schilAnoName.equals("HR")) {
