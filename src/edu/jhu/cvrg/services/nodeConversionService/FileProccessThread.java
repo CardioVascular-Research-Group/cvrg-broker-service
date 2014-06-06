@@ -20,6 +20,7 @@ import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.MuseAnnotationReader;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
+import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessSchiller;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
@@ -94,7 +95,7 @@ public class FileProccessThread extends Thread {
 		
 		log.info("["+docId+"]The runtime for writing the new file is = " + writeTime + " milliseconds");
 		
-		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
+		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat)  || fileFormat.SCHILLER.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
 		
 		dbUtility.updateUploadStatus(docId, EnumUploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
 		
@@ -124,7 +125,7 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(dataList);
 			nonLeadList.addAll(globalList);
 			
-			
+
 		}else if(fileFormat.PHILIPS104.equals(inputFormat)) {
 			
 			org.cvrgrid.philips.jaxb.beans.Restingecgdata ecgData = (org.cvrgrid.philips.jaxb.beans.Restingecgdata) conv.getPhilipsRestingecgdata();
@@ -141,6 +142,22 @@ public class FileProccessThread extends Thread {
 			nonLeadList.addAll(orderList);
 			nonLeadList.addAll(dataList);
 			nonLeadList.addAll(globalList);
+			
+		}else if(fileFormat.SCHILLER.equals(inputFormat)) {
+			                                               
+			org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI ecgData = (org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI) conv.getComXiriuzSemaXmlSchillerEDISchillerEDI();
+			
+			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, metaData.getStudyID(), Long.valueOf(metaData.getUserID()), docId, metaData.getRecordName(), metaData.getSubjectID());
+			schillerAnn.populateAnnotations();
+			ArrayList<AnnotationDTO> orderList = schillerAnn.getExamdescriptInfo();
+			ArrayList<AnnotationDTO> dataList = schillerAnn.getPatDataInfo();
+			ArrayList<AnnotationDTO> globalList = schillerAnn.getCrossleadAnnotations();
+			
+			leadMuseAnnotations = schillerAnn.getLeadAnnotations();
+			
+			nonLeadMuseAnnotations.addAll(orderList);
+			nonLeadMuseAnnotations.addAll(dataList);
+			nonLeadMuseAnnotations.addAll(globalList);
 			
 		}else if(fileFormat.MUSEXML.equals(inputFormat)) {
 			String rawMuseXML = conv.getMuseRawXML();
@@ -163,7 +180,7 @@ public class FileProccessThread extends Thread {
 		
 		// kept here for backwards compatibility with the Philips annotations, but the methods will be 
 		// phased out in the future and the Philips annotation processing will be redone
-		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat))) {
+		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat)) ) {
 			convertLeadAnnotations(leadList);
 			convertNonLeadAnnotations(nonLeadList, "");
 		}
@@ -249,7 +266,6 @@ public class FileProccessThread extends Thread {
 				 
 				annotationSet.add(annData);
 			}
-			
 			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
 		}
 				

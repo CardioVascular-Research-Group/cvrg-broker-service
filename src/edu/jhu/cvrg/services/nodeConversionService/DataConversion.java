@@ -21,6 +21,7 @@ import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
 import edu.jhu.cvrg.services.brokerSvcUtils.BrokerSvcUtils;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
+import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
 
 public class DataConversion {
 
@@ -197,6 +198,24 @@ public class DataConversion {
 
 		return convertFile(e, 
 						   ECGformatConverter.fileFormat.MUSEXML,  
+						   ECGformatConverter.fileFormat.WFDB_16 );
+	}
+	
+	/** DataConversion service method to convert a SCHILLER formatted XML file (Base64) to both WFDB and RDT formatted files.<BR/>
+	 * On SUCCESS files of all three formats will be in the input directory<BR/>
+	 * Assumes that the input files are in the input directories, e.g.:<BR/>
+	 * <i>parentFolder/userId/public/subjectId/input</i><br>
+	 * @param e - OMElement containing the parameters:<BR/>
+	 * userId, subjectId, filename, isPublic
+	 *  
+	 * @return OMElement containing  "SUCCESS" or "FAILURE"
+	 */
+	public OMElement SCHILLERToWFDB(OMElement e) {
+		log.info("DataConversion.SCHILLER service called. Starting SCHILLER -> WFDB.");
+		//log.info(" ");
+
+		return convertFile(e, 
+						   ECGformatConverter.fileFormat.SCHILLER,  
 						   ECGformatConverter.fileFormat.WFDB_16 );
 	}
 
@@ -708,6 +727,7 @@ public class DataConversion {
 			}
 			
 			metaData.setSampFrequency(conv.getSamplingRate());
+			//system.out.println(conv.getSamplingRate() + " this is the sampling rate returned.");
 			metaData.setChannels(conv.getChannelCount());
 			metaData.setNumberOfPoints(conv.getNumberOfPoints());
 
