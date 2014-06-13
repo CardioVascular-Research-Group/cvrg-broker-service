@@ -115,16 +115,6 @@ class SchillerAnnotations {
 				ecgOntoName = "S_Wave_Duration";
 			}else if(schilAnoName.equals("S_AMPL")) {
 				ecgOntoName = "S_Wave_Amplitude";
-			/*}else if(schilAnoName.equals("R-_DUR")) {
-				ecgOntoName = "R_Minus_Wave_Duration";
-			}else if(schilAnoName.equals("R-_AMPL")) {
-				ecgOntoName = "R_Minus_Wave_Amplitude";
-			}else if(schilAnoName.equals("S-_DUR")) {
-				ecgOntoName = "S_Minus_Duration";
-			}else if(schilAnoName.equals("S-_AMPL")) {
-				ecgOntoName = "S_Minus_Amplitude";
-			}else if(schilAnoName.equals("J_AMPL")) {
-				ecgOntoName = "J_Amplitude";*/
 			}else{
 				ecgOntoName = schilAnoName;
 			}

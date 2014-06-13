@@ -50,7 +50,6 @@ public class BrokerSvcUtils {
 		debugPrintLocalln("Initializing brokerSvcUtils() in Verbose mode.");
 	}
 	
-	
 	/** Creates a unique string based on the current timestamp, plus a pseudorandom number between zero and 1000
 	 * 	In the form YYYYyMMmDDdHH_MM_SSxRRRR
 	 * @return - a mostly unique string
@@ -563,8 +562,7 @@ public class BrokerSvcUtils {
 			
 			return sender;
 	 }
-
-
+	 
 	public void debugPrintLocalln(String text){
 		if(verbose)	log.info("+ bSvcUtils: " + text);
 	}
