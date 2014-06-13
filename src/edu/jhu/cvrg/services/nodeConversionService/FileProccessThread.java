@@ -180,7 +180,7 @@ public class FileProccessThread extends Thread {
 		
 		// kept here for backwards compatibility with the Philips annotations, but the methods will be 
 		// phased out in the future and the Philips annotation processing will be redone
-		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat)) ) {
+		if((fileFormat.PHILIPS103.equals(inputFormat)) || (fileFormat.PHILIPS104.equals(inputFormat))) {
 			convertLeadAnnotations(leadList);
 			convertNonLeadAnnotations(nonLeadList, "");
 		}
