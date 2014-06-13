@@ -211,6 +211,7 @@ public class DataConversion {
 	 * @return OMElement containing  "SUCCESS" or "FAILURE"
 	 */
 	public OMElement SCHILLERToWFDB(OMElement e) {
+		System.out.println("DataConversion.SCHILLER service called. Starting SCHILLER -> WFDB.");
 		log.info("DataConversion.SCHILLER service called. Starting SCHILLER -> WFDB.");
 		//log.info(" ");
 
@@ -604,12 +605,14 @@ public class DataConversion {
 	 * @return OMElement containing  "SUCCESS" or some other string
 	 */
 	private org.apache.axiom.om.OMElement convertFile(	org.apache.axiom.om.OMElement param0,	ECGformatConverter.fileFormat inputFormat, ECGformatConverter.fileFormat outputFormat) {
+		System.out.println("DataConversion.convertFile()");
 		
 		Map<String, OMElement> params = ServiceUtils.extractParams(param0);
 		
 		MetaContainer metaData = getMetaData(params);
 		
 		verbose = Boolean.getBoolean(params.get("verbose").getText());
+		System.out.println(" DataConversion, verbose:" + verbose);
 		long groupId = Long.valueOf(params.get("groupId").getText()); 
 		long folderId = Long.valueOf(params.get("folderId").getText());
 		long companyId = Long.valueOf(params.get("companyId").getText());
@@ -650,6 +653,8 @@ public class DataConversion {
 			long docId = Long.parseLong(returnString);
 			ServiceUtils.addOMEChild("documentId", String.valueOf(docId), e, fac, omNs);
 		}catch(NumberFormatException ex){
+			debugPrintln("Error:" + ex.getLocalizedMessage());
+			
 			ServiceUtils.addOMEChild("errorMessage", returnString, e, fac, omNs);	
 		}
 		
@@ -658,6 +663,7 @@ public class DataConversion {
 			ServiceUtils.deleteFile(inputPath, headerFileName);	
 		}
 		
+		debugPrintln("DataConversion.convertFile() finished.");
 		return e;
 	}
 
@@ -720,6 +726,7 @@ public class DataConversion {
 		try{
 			
 			boolean ret = conv.read(inputFormat, metaData.getFileName(), signalsRequested, inputPath, recordName);
+			debugPrintln("File read returned: " + ret);
 			
 			if(!ret){
 				errorMessage = "Error: On File read.";
@@ -795,7 +802,8 @@ public class DataConversion {
 	 * @param out - String to be printed
 	 */
 	private void debugPrintln(String out){
-			log.info(" #DC3# " + out);
+		System.out.println(" #DC3# " + out);
+		log.info(" #DC3# " + out);
 	}
 	
 	
