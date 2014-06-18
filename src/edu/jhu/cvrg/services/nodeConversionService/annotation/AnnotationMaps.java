@@ -10,6 +10,8 @@ public static final Map<String, String> schilAnoMap = new HashMap<String, String
 		{
 			put("AXIS_QRS", "QRS_Wave_Complex_Axis");
 			put("QRS", "QRS_Wave_Duration");
+			put("QT", "QT_Interval");
+			put("QTC", "QT_Corrected");
 			put("Q_DUR", "Q_Wave_Duration");
 			put("Q_AMPL", "Q_Wave_Amplitude");
 			put("R_DUR", "R_Wave_Duration");

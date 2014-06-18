@@ -235,12 +235,9 @@ public class ProcessSchiller {
 				if((annotationMappings.get(key) != null)) {
 					
 					String conceptId = "";
-					if(key.equals("QRS_Wave_Duration")){
-						conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000072"; 
-					}else if(key.equals("QT_Interval")){
-						conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000682"; 
-					}else if(key.equals("QRS_Wave_Complex_Axis")) {
-						conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000838";
+					
+					if (AnnotationMaps.ecgOntoMap.containsKey(key)){
+						conceptId = "http://www.cvrgrid.org/files/" + AnnotationMaps.ecgOntoMap.get(key);
 					}
 					
 					AnnotationDTO annData = new AnnotationDTO();
@@ -252,7 +249,6 @@ public class ProcessSchiller {
 					annData.setValue(annotationMappings.get(key).toString());
 					annData.setName(key);
 					annData.setCreatedBy(createdBy);
-					//annData.setBioportalReferenceLink(conceptId);
 					annData.setBioportalClassId(conceptId);
 					annData.setAnnotationType(annType);
 					annData.setTimestamp(new GregorianCalendar());

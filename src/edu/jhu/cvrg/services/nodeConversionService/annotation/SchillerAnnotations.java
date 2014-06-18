@@ -61,13 +61,15 @@ class SchillerAnnotations {
 		LinkedHashMap<String, Object> annotationMappings = new LinkedHashMap<String, Object>();
 		List<AnnotationGlobal> anGlo = globalAnnotations.getAnnotationGlobal();
 		for(AnnotationGlobal anGloAnnot: anGlo) {
-			
-			String schilAnoName = anGloAnnot.getName();
-			String ecgOntoName = "";
-			if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
-				ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
-			}else{
-				ecgOntoName = schilAnoName;
+			if (anGloAnnot.getValue() != null){
+				String schilAnoName = anGloAnnot.getName();
+				String ecgOntoName = "";
+				if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
+					ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
+				}else{
+					ecgOntoName = schilAnoName;
+				}
+				annotationMappings.put( ecgOntoName, anGloAnnot.getValue() );
 			}
 		}
 		return annotationMappings;
@@ -78,16 +80,14 @@ class SchillerAnnotations {
 		LinkedHashMap<String, Object> annotationMappings = new LinkedHashMap<String, Object>();
 		List<AnnotationLead> ano = list.getAnnotationLead(); 	
     	for (AnnotationLead anoLead : ano ) {
-			
-			String schilAnoName = anoLead.getName();
-			String ecgOntoName = "";
-			if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
-				ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
-			}else{
-				ecgOntoName = schilAnoName;
-			}
-			
 			if (anoLead.getValue() != null){
+				String schilAnoName = anoLead.getName();
+				String ecgOntoName = "";
+				if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
+					ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
+				}else{
+					ecgOntoName = schilAnoName;
+				}
 				annotationMappings.put( ecgOntoName, anoLead.getValue() );
 			}
     	}
