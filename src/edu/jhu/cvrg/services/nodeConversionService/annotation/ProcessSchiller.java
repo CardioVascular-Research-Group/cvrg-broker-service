@@ -101,10 +101,6 @@ public class ProcessSchiller {
 		this.extractPatdata();
 		this.processLeadAnnotations();
 		this.processCrossleadAnnotations();
-		/*if(comxiriuzsemaxmlschilleredischilleredi.getExamdescript() != null) {
-			this.processGroupAnnotations();
-			this.processLeadAnnotations();
-		}*/
 	}
 
 	private void extractExamdescript() {
@@ -204,28 +200,8 @@ public class ProcessSchiller {
 									 null, leadIndex, null, null, fullAnnotation , Calendar.getInstance(), 
 									 null, null, null, null, studyID, recordName, subjectID);
 							
-							// TODO:  A lookup table should be used instead of this, but for now this will do since
-							// we only have a few Muse annotations that have matching Bioportal terms
-							if(key.equals("PR_Interval")){
-								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000341"; 
-							}else if(key.equals("QT_Interval")){
-								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000682"; 
-							}else if(key.equals("QT_Corrected")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000701";
-							}else if(key.equals("QT_Corrected_Fridericias_Formula")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGTermsv1.owl#ECG_000000040";
-							}else if(key.equals("Q_Wave_Duration")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000551";
-							}else if(key.equals("Q_Wave_Amplitude")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000652";
-							}else if(key.equals("R_Wave_Amplitude")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000750";
-							}else if(key.equals("R_Wave_Duration")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000597";
-							}else if(key.equals("S_Wave_Amplitude")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000107";
-							}else if(key.equals("S_Wave_Duration")) {
-								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl#ECG_000000491";
+							if (AnnotationMaps.ecgOntoMap.containsKey(key)){
+								conceptId = "http://www.cvrgrid.org/files/" + AnnotationMaps.ecgOntoMap.get(key);
 							}
 							
 							annData.setNewStudyID(studyID);
@@ -236,10 +212,8 @@ public class ProcessSchiller {
 							annData.setValue(leadMappings.get(key).toString());
 							annData.setName(key);
 							annData.setCreatedBy(createdBy);
-							//annData.setBioportalReferenceLink(conceptId);
 							annData.setBioportalClassId(conceptId);
 							annData.setTimestamp(new GregorianCalendar());
-							
 							annotationsToAdd.add(annData);
 							
 						}

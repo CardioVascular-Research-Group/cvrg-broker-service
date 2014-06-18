@@ -1,6 +1,7 @@
 package edu.jhu.cvrg.services.nodeConversionService.annotation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -63,33 +64,10 @@ class SchillerAnnotations {
 			
 			String schilAnoName = anGloAnnot.getName();
 			String ecgOntoName = "";
-			if(schilAnoName.equals("AXIS_QRS")) {
-				ecgOntoName = "QRS_Wave_Complex_Axis";
-			}else if(schilAnoName.equals("QRS")) {
-				ecgOntoName = "QRS_Wave_Duration";
-			/*}else if(schilAnoName.equals("HR")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("RR")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("P")) {
-				ecgOntoName = "P_Duration";
-			}else if(schilAnoName.equals("PQ")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("QT")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("QTC")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("QRS")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("QRS")) {
-				ecgOntoName = "";
-			}else if(schilAnoName.equals("QRS")) {
-				ecgOntoName = "";*/
+			if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
+				ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
 			}else{
 				ecgOntoName = schilAnoName;
-			}
-			if (anGloAnnot.getValue() != null){
-				annotationMappings.put( ecgOntoName, anGloAnnot.getValue() );
 			}
 		}
 		return annotationMappings;
@@ -103,27 +81,16 @@ class SchillerAnnotations {
 			
 			String schilAnoName = anoLead.getName();
 			String ecgOntoName = "";
-			if(schilAnoName.equals("Q_DUR")){
-				ecgOntoName = "Q_Wave_Duration"; 
-			}else if(schilAnoName.equals("Q_AMPL")){
-				ecgOntoName = "Q_Wave_Amplitude"; 
-			}else if(schilAnoName.equals("R_DUR")) {
-				ecgOntoName = "R_Wave_Duration";
-			}else if(schilAnoName.equals("R_AMPL")) {
-				ecgOntoName = "R_Wave_Amplitude";
-			}else if(schilAnoName.equals("S_DUR")) {
-				ecgOntoName = "S_Wave_Duration";
-			}else if(schilAnoName.equals("S_AMPL")) {
-				ecgOntoName = "S_Wave_Amplitude";
+			if (AnnotationMaps.schilAnoMap.containsKey(schilAnoName)){
+				ecgOntoName = AnnotationMaps.schilAnoMap.get(schilAnoName);
 			}else{
 				ecgOntoName = schilAnoName;
 			}
+			
 			if (anoLead.getValue() != null){
 				annotationMappings.put( ecgOntoName, anoLead.getValue() );
-				//annotationMappings.put( anoLead.getName(), anoLead.getValue() );
 			}
     	}
 		return annotationMappings;		
 	}
-
 }
