@@ -27,11 +27,13 @@ class SchillerAnnotations {
 		examdescriptAnnsMap.put("Exam Start Date", examdescriptAnn.getStartdatetime().getDate());
 		examdescriptAnnsMap.put("Exam Start Time", examdescriptAnn.getStartdatetime().getTime());
 		examdescriptAnnsMap.put("Rec Type", examdescriptAnn.getRectype());
-		if (examdescriptAnn.getJobId().toString() != null){
-			examdescriptAnnsMap.put("Job ID", examdescriptAnn.getJobId().toString());
+		String acqDev = examdescriptAnn.getAquiringdevice().getHardware().getVendor() + " " + examdescriptAnn.getAquiringdevice().getHardware().getModel();
+		examdescriptAnnsMap.put("Acquiring Device", acqDev);
+		if (examdescriptAnn.getJobId().trim().length() != 0){
+			examdescriptAnnsMap.put("Job ID", examdescriptAnn.getJobId());
 		}
 		examdescriptAnnsMap.put("User ID", examdescriptAnn.getUserId());
-		if (examdescriptAnn.getCaseId() != null){
+		if (examdescriptAnn.getCaseId().trim().length() != 0){
 			examdescriptAnnsMap.put("Case ID", examdescriptAnn.getCaseId());
 		}
 		return examdescriptAnnsMap;
@@ -69,7 +71,8 @@ class SchillerAnnotations {
 				}else{
 					ecgOntoName = schilAnoName;
 				}
-				annotationMappings.put( ecgOntoName, anGloAnnot.getValue() );
+				String checked = checkForDash(anGloAnnot.getValue());
+				annotationMappings.put( ecgOntoName, checked );
 			}
 		}
 		return annotationMappings;
@@ -88,9 +91,19 @@ class SchillerAnnotations {
 				}else{
 					ecgOntoName = schilAnoName;
 				}
-				annotationMappings.put( ecgOntoName, anoLead.getValue() );
+				String checked = checkForDash(anoLead.getValue());
+				annotationMappings.put( ecgOntoName, checked );
 			}
     	}
 		return annotationMappings;		
 	}
+	
+
+	public static String checkForDash(String test) {
+		if (test.trim().equalsIgnoreCase("-")){
+			test = "0";
+		}
+		return test;
+	}
+	
 }

@@ -5,8 +5,10 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -98,7 +100,7 @@ public class FileProccessThread extends Thread {
 		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat)  || fileFormat.SCHILLER.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
 		
 		dbUtility.updateUploadStatus(docId, EnumUploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
-		
+
 		long  annotationTime = java.lang.System.currentTimeMillis();
 		
 		ArrayList<AnnotationData> nonLeadList = new ArrayList<AnnotationData>();

@@ -21,9 +21,8 @@ import org.cvrgrid.schiller.jaxb.beans.Wavedata;
 import org.cvrgrid.schiller.jaxb.beans.Channel;
 import org.cvrgrid.schiller.jaxb.beans.AnnotationGlobal;
 
+import edu.jhu.cvrg.dbapi.DBUtility;
 import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
-//import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
-import edu.jhu.cvrg.waveform.utility.WebServiceUtility;
 
 /**
  * This class will take the annotation data that has been gathered and put it into a form which complies
@@ -178,10 +177,7 @@ public class ProcessSchiller {
 			    	for (Channel subChannel : channel) {
 						String leadValue = subChannel.getName();
 						
-						leadIndex = containsEnum(leadValue);
-						if (leadIndex == 20){
-							leadIndex = null;
-						}
+						leadIndex = setLeadIndex(leadValue);
 						
 						String annType = "ANNOTATION";
 						
@@ -201,7 +197,7 @@ public class ProcessSchiller {
 									 null, null, null, null, studyID, recordName, subjectID);
 							
 							if (AnnotationMaps.ecgOntoMap.containsKey(key)){
-								conceptId = "http://www.cvrgrid.org/files/" + AnnotationMaps.ecgOntoMap.get(key);
+								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl" + AnnotationMaps.ecgOntoMap.get(key);
 							}
 							
 							annData.setNewStudyID(studyID);
@@ -213,9 +209,9 @@ public class ProcessSchiller {
 							annData.setName(key);
 							annData.setCreatedBy(createdBy);
 							annData.setBioportalClassId(conceptId);
+							annData.setBioportalReferenceLink("%" + leadValue + "%");  // Just did this to drop lead in database for testing - remove
 							annData.setTimestamp(new GregorianCalendar());
 							annotationsToAdd.add(annData);
-							
 						}
 						leadAnnotationsList.put(Integer.toString(leadIndex), annotationsToAdd);
 			    	}
@@ -237,7 +233,7 @@ public class ProcessSchiller {
 					String conceptId = "";
 					
 					if (AnnotationMaps.ecgOntoMap.containsKey(key)){
-						conceptId = "http://www.cvrgrid.org/files/" + AnnotationMaps.ecgOntoMap.get(key);
+						conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl" + AnnotationMaps.ecgOntoMap.get(key);
 					}
 					
 					AnnotationDTO annData = new AnnotationDTO();
@@ -258,15 +254,31 @@ public class ProcessSchiller {
 			}	
 		}
 	}	
-	public static int containsEnum(String test) {
+	
+	public static int setLeadIndex(String test) {
+		
 		int i = 0;
-		for (LeadEnum l : LeadEnum.values()){
-			if (l.name().equalsIgnoreCase(test)){
-				return i;
-			}
-			i++;
+		if (AnnotationMaps.dynamicLeadNames.containsKey(test)){
+			i = AnnotationMaps.dynamicLeadNames.get(test);
+			return i;
+		}else{
+			int j = AnnotationMaps.dynamicLeadNames.size();
+			AnnotationMaps.dynamicLeadNames.put(test, j);
+			i = j;
+			/* pseudo code continuing process for new Lead index setter...
+			 * 
+			 * 	dbutility.getLeadListDTO
+			 * 		is key in the database?
+			 *			y->  1. get index #
+			 *     		     2. set i to index #
+			 * 			n->  1. insert l.name ... into database
+			 *      	     2. get index # for new entry from database
+			 *      	     3. set i to index #
+			 *      		 4.   ...  
+			 *      		 5. profit!
+			 *      
+			 *  */
 		}
-		i=20;    // can't nullify the int b/c method can't return null so assign it here and nullify it once it's returned.
 		return i;
 	}
 }
