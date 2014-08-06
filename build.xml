@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
 
-<project name="cvrg-broker-service" basedir="." default="deployAllServices">
+<project name="cvrg-broker-service" basedir="." default="deployConversionService">
 	
 	<property name="projectName" value="nodeConversionService"/>
 	
@@ -77,63 +77,16 @@
 		</antcall>
 	</target>
 	
-	<target name="compileAnalysisService" depends="cleanAll">
-		<antcall target="compileService">
-			<param name="projectName" value="nodeAnalysisService"/>
-		</antcall>
-	</target>
-	
-	<target name="compileDataService" depends="cleanAll">
-		<antcall target="compileService">
-			<param name="projectName" value="nodeDataService"/>
-		</antcall>
-	</target>
-
-	<target name="compileRegistrationService" depends="cleanAll">
-		<antcall target="compileService">
-			<param name="projectName" value="nodeRegistrationService"/>
-		</antcall>
-	</target>
-	
 	<target name="deployConversionService" depends="compileConversionService">
 		<antcall target="deployService">
 			<param name="projectName" value="nodeConversionService"/>
 		</antcall>
 	</target>
 	
-	<target name="deployAnalysisService" depends="compileAnalysisService">
-		<antcall target="deployService">
-			<param name="projectName" value="nodeAnalysisService"/>
-		</antcall>
-	</target>
-	
-	<target name="deployDataService" depends="compileDataService">
-		<antcall target="deployService">
-			<param name="projectName" value="nodeDataService"/>
-		</antcall>
-	</target>
-
-	<target name="deployRegistrationService" depends="compileRegistrationService">
-		<antcall target="deployService">
-			<param name="projectName" value="nodeRegistrationService"/>
-		</antcall>
-	</target>
-	
-	<target name="compileAllServices">
-		<antcall target="compileConversionService" />
-	</target>
-	
-	<target name="deployAllServices">
-		<antcall target="deployConversionService" />
-	</target>
-	
-	
 	<target name="fullDeploy">
 		<ant antfile="../dbutility/build.xml" target="jar" inheritall="false"/>
 		<ant antfile="../waveform-utilities/build.xml" target="jar" inheritall="false"/>
-		<ant antfile="../waveform-annotations/build.xml" target="jar" inheritall="false"/>
 		
-		<ant antfile="../liferay-ws-client/build.xml" target="generateJarFiles" inheritall="false"/>
 		<ant antfile="../ZipHelper/build.xml" target="generateJarFiles" inheritall="false"/>
 		<ant antfile="../jsierraecg/build.xml" target="generateJarFiles" inheritall="false"/>
 		<ant antfile="../Phlilips1.04/build.xml" target="generateJarFiles" inheritall="false"/>
@@ -141,13 +94,22 @@
 		
 		<ant antfile="../ECG_Converter4/build.xml" target="generateJarFiles" inheritall="false"/>
 		
+		<ant antfile="../liferay-ws-client/build.xml" target="generateJarFiles" inheritall="false"/>
+		
+		<ant antfile="../service-utilities/build.xml" target="jar" inheritall="false"/>
+<!--		
 		<ant antfile="../dbutility/build.xml" target="copyDependenciesToServer" inheritall="false"/>
 		<ant antfile="../waveform-utilities/build.xml" target="copyDependenciesToServer" inheritall="false"/>
 		<ant antfile="../waveform-annotations/build.xml" target="copyDependenciesToServer" inheritall="false"/>
 		<ant antfile="../liferay-ws-client/build.xml" target="copyDependenciesToServer" inheritall="false"/>
 		<ant antfile="../ECG_Converter4/build.xml" target="copyDependenciesToServer" inheritall="false"/>
+-->	
+		<antcall target="deployConversionService"/>
 		
-		<antcall target="deployAllServices"/>
+		<ant antfile="../data-transfer-service/build.xml" target="deployDataTransferService" inheritall="false"/>
+		<ant antfile="../physionet-analysis-service/build.xml" target="deployAnalysisService" inheritall="false"/>
+		<ant antfile="../waveform-support-service/build.xml" target="deployWaveformSupportService" inheritall="false"/>
+		
 	</target>
 		
 </project>
