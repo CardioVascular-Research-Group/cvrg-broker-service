@@ -711,10 +711,11 @@ public class DataConversion {
 		// check that both files are available for WFDB conversion.
 		if(inputFormat == ECGformatConverter.fileFormat.WFDB){
 			errorMessage = checkWFDBcompleteness(inputPath, metaData.getUserID(), metaData.getFileName());
-			debugPrintln("checkWFDBcompleteness() returned: " + errorMessage);
 			if (errorMessage != null && errorMessage.length()>0){
+				debugPrintln("checkWFDBcompleteness() returned: " + errorMessage);
 				return errorMessage;
 			}
+			debugPrintln("checkWFDBcompleteness() indicates WFDB is complete.");
 		}
 
 		ECGformatConverter conv = new ECGformatConverter();
@@ -775,8 +776,8 @@ public class DataConversion {
 		
 		String ext = inputFilename.substring(inputFilename.lastIndexOf(".")+1).toLowerCase(); // get the extension (in lower case)
 		String name = inputFilename.substring(0, inputFilename.lastIndexOf(".")); // file name minus extension.
-		debugPrintln(inputPath + name + ".dat");
-		debugPrintln(inputPath + name + ".hea");
+//		debugPrintln(inputPath + name + ".dat");
+//		debugPrintln(inputPath + name + ".hea");
 
 		File datFile = new File(inputPath + name + ".dat");
 		File heaFile = new File(inputPath + name + ".hea");
@@ -802,7 +803,7 @@ public class DataConversion {
 	 * @param out - String to be printed
 	 */
 	private void debugPrintln(String out){
-		System.out.println(" #DC3# " + out);
+//		System.out.println(" #DC3# " + out);
 		log.info(" #DC3# " + out);
 	}
 	
