@@ -2,7 +2,7 @@
 
 	<xsl:template match="/">
     	<html>
-	        File Analyzed,Length,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000000150|Lead,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001083|Total Beat Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001084|Ectopic Beat Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000000701|QT Corrected Bazett,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001070|QTVI log,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001078|QT Dispersion,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001086|RR Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_0000001088|RR Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001091|RR Minimum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001090|RR Maximum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001094|RR Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001096|RR Standard Deviation,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001085|QT Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001089|QT Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001093|QT Minimum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001092|QT Maximum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001095|QT Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001097|QT Standard Deviation,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_XXXXXXXXX|HR Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000000833|HR Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_XXXXXXXXX|HR Min,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_XXXXXXXXX|HR Max,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_XXXXXXXXX|HR Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_XXXXXXXXX|HR Standard Deviation
+	        File Analyzed,Length,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000000150|Lead,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001083|Total Beat Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001084|Ectopic Beat Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000000701|QT Corrected Bazett,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001070|QTVI log,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001078|QT Dispersion,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001086|RR Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_0000001088|RR Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001091|RR Minimum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001090|RR Maximum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001094|RR Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001096|RR Standard Deviation,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001085|QT Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001089|QT Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001093|QT Minimum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001092|QT Maximum,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001095|QT Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001097|QT Standard Deviation,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001103|Heart Rate Interval Count,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001099|Heart Rate Mean,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001100|Heart Rate Min,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001098|Heart Rate Max,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001101|Heart Rate Variance,http://purl.bioontology.org/ontology/ECGT/ECGTermsv1:ECG_000001102|Heart Rate Standard Deviation
 	        <xsl:for-each select="/autoQRSResults/LeadResults/Lead">
 	        	<xsl:text>&#10;</xsl:text> <!--  New Line -->
 				<xsl:value-of select="/autoQRSResults/FileAnalyzed"/>
@@ -48,17 +48,17 @@
 			 	<xsl:value-of select="../QTIntervalResults/QTStandardDeviation"/>
 
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRIntervalCount"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Count"/>
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRMean"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Mean"/>
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRMin"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Minimum"/>
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRMax"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Maximum"/>
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRVariance"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Variance"/>
 				<xsl:value-of select="','"/>
-			 	<xsl:value-of select="../HRIntervalResults/HRStandardDeviation"/>
+			 	<xsl:value-of select="../HRIntervalResults/Heart_Rate_Standard_Deviation"/>
 	         </xsl:for-each>
         	 <xsl:text>&#10;</xsl:text> <!--  New Line -->
         	 Version 2.2
