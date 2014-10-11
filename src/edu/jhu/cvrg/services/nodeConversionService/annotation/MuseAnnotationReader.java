@@ -1,14 +1,8 @@
 package edu.jhu.cvrg.services.nodeConversionService.annotation;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -16,20 +10,18 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
+import edu.jhu.cvrg.data.dto.AnnotationDTO;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.muse.LeadMeta;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.muse.QRSTimesTypes;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.muse.RestingECGMeasurements;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.muse.WaveformMeta;
 import edu.jhu.cvrg.waveform.utility.WebServiceUtility;
-import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
-import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
 
 /**
  * This is the controller that will parse the annotations from Muse 7, 7.1, and 8 XML files and extract them.  This will put each set of annotations in a List
@@ -252,18 +244,15 @@ public class MuseAnnotationReader {
 					prefLabel = key;
 				}
 				
-				AnnotationDTO annData = new AnnotationDTO(Long.valueOf(userID)/*userid*/, 0L/*groupID*/, 0L/*companyID*/, docID, createdBy/*createdBy*/, annType, prefLabel, 
+				AnnotationDTO annData = new AnnotationDTO(Long.valueOf(userID)/*userid*/, docID, createdBy/*createdBy*/, annType, prefLabel, 
 						 conceptId != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY : null , conceptId,
 						 null/*bioportalRef*/, iLeadIndex, null/*unitMeasurement*/, null/*description*/, fullAnnotation , Calendar.getInstance(), 
-						 null, null, null, null, //start and end are the same than this is a single point annotation 
-						 studyID/*newStudyID*/, recordName/*newRecordName*/, subjectID/*newSubjectID*/);
+						 null, null, null, null //start and end are the same than this is a single point annotation 
+						 );
 				
 
-				annData.setNewStudyID(studyID);
-				annData.setNewSubjectID(subjectID);
 				annData.setUserID(Long.valueOf(userID));
 				annData.setRecordID(docID);
-				annData.setNewRecordName(recordName);
 				annData.setValue(annotationEntries.get(key).toString());
 				annData.setName(key);
 				annData.setCreatedBy(createdBy);

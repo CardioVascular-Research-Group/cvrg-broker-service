@@ -1,28 +1,20 @@
 package edu.jhu.cvrg.services.nodeConversionService.annotation;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
+import org.cvrgrid.schiller.jaxb.beans.Channel;
 import org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI;
+import org.cvrgrid.schiller.jaxb.beans.Event;
 import org.cvrgrid.schiller.jaxb.beans.Examdescript;
 import org.cvrgrid.schiller.jaxb.beans.Patdata;
-import org.cvrgrid.schiller.jaxb.beans.Eventdata;
-import org.cvrgrid.schiller.jaxb.beans.Event;
 import org.cvrgrid.schiller.jaxb.beans.Wavedata;
-import org.cvrgrid.schiller.jaxb.beans.Channel;
-import org.cvrgrid.schiller.jaxb.beans.AnnotationGlobal;
 
-import edu.jhu.cvrg.dbapi.DBUtility;
-import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
+import edu.jhu.cvrg.data.dto.AnnotationDTO;
 
 /**
  * This class will take the annotation data that has been gathered and put it into a form which complies
@@ -40,16 +32,13 @@ public class ProcessSchiller {
 	private ArrayList<AnnotationDTO[]> groupAnnotationsList;
 	private LinkedHashMap<String, ArrayList<AnnotationDTO>> leadAnnotationsList;
 	private SchillerAnnotations annotationRetriever;
-	private String studyID;
 	private long userID;
 	private long docID;
-	private String recordName;
-	private String subjectID;
 	private final String createdBy = "Schiller Upload";
 	
 	private Logger log = Logger.getLogger(ProcessSchiller.class);
 	
-	public ProcessSchiller(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG, String newStudyID, long newUserID, long newDocID, String newRecordName, String newSubjectID) {
+	public ProcessSchiller(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG, long newUserID, long newDocID) {
 		comxiriuzsemaxmlschilleredischilleredi = newECG;
 		annotationRetriever = new SchillerAnnotations();
 		examdescriptList = new ArrayList<AnnotationDTO>();
@@ -57,11 +46,8 @@ public class ProcessSchiller {
 		crossleadAnnotationsList = new ArrayList<AnnotationDTO>();
 		groupAnnotationsList = new ArrayList<AnnotationDTO[]>();
 		leadAnnotationsList = new LinkedHashMap<String, ArrayList<AnnotationDTO>>();
-		studyID = newStudyID;
 		userID = newUserID;
 		docID = newDocID;
-		recordName = newRecordName;
-		subjectID = newSubjectID;
 	}
 
 	public void setComXiriuzSemaXmlSchillerEDISchillerEDI(ComXiriuzSemaXmlSchillerEDISchillerEDI newECG) {
@@ -115,11 +101,8 @@ public class ProcessSchiller {
 				if((orderMappings.get(key) != null)) {
 					
 					AnnotationDTO annData = new AnnotationDTO();
-					annData.setNewStudyID(studyID);
-					annData.setNewSubjectID(subjectID);
 					annData.setUserID(Long.valueOf(userID));
 					annData.setRecordID(docID);
-					annData.setNewRecordName(recordName);
 					annData.setValue(orderMappings.get(key).toString());
 					annData.setName(key);
 					annData.setCreatedBy(createdBy);
@@ -143,11 +126,8 @@ public class ProcessSchiller {
 			for(String key : orderMappings.keySet()) {
 				if((orderMappings.get(key) != null)) {
 					AnnotationDTO annData = new AnnotationDTO();
-					annData.setNewStudyID(studyID);
-					annData.setNewSubjectID(subjectID);
 					annData.setUserID(Long.valueOf(userID));
 					annData.setRecordID(docID);
-					annData.setNewRecordName(recordName);
 					annData.setValue(orderMappings.get(key).toString());
 					annData.setName(key);
 					annData.setCreatedBy(createdBy);
@@ -191,20 +171,17 @@ public class ProcessSchiller {
 							String fullAnnotation = "";
 							String prefLabel = "";
 							
-							AnnotationDTO annData = new AnnotationDTO(Long.valueOf(userID), 0L, 0L, docID, createdBy, annType, prefLabel, 
+							AnnotationDTO annData = new AnnotationDTO(Long.valueOf(userID), docID, createdBy, annType, prefLabel, 
 									 conceptId != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY : null , conceptId,
 									 null, leadIndex, null, null, fullAnnotation , Calendar.getInstance(), 
-									 null, null, null, null, studyID, recordName, subjectID);
+									 null, null, null, null);
 							
 							if (AnnotationMaps.ecgOntoMap.containsKey(key)){
 								conceptId = "http://www.cvrgrid.org/files/ECGOntologyv1.owl" + AnnotationMaps.ecgOntoMap.get(key);
 							}
 							
-							annData.setNewStudyID(studyID);
-							annData.setNewSubjectID(subjectID);
 							annData.setUserID(Long.valueOf(userID));
 							annData.setRecordID(docID);
-							annData.setNewRecordName(recordName);
 							annData.setValue(leadMappings.get(key).toString());
 							annData.setName(key);
 							annData.setCreatedBy(createdBy);
@@ -237,11 +214,8 @@ public class ProcessSchiller {
 					}
 					
 					AnnotationDTO annData = new AnnotationDTO();
-					annData.setNewStudyID(studyID);
-					annData.setNewSubjectID(subjectID);
 					annData.setUserID(Long.valueOf(userID));
 					annData.setRecordID(docID);
-					annData.setNewRecordName(recordName);
 					annData.setValue(annotationMappings.get(key).toString());
 					annData.setName(key);
 					annData.setCreatedBy(createdBy);

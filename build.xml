@@ -84,7 +84,7 @@
 	</target>
 	
 	<target name="fullDeploy">
-		<ant antfile="../dbutility/build.xml" target="jar" inheritall="false"/>
+<!--	<ant antfile="../dbutility/build.xml" target="jar" inheritall="false"/> -->
 		<ant antfile="../waveform-utilities/build.xml" target="jar" inheritall="false"/>
 		
 		<ant antfile="../ZipHelper/build.xml" target="generateJarFiles" inheritall="false"/>
@@ -109,6 +109,7 @@
 		<ant antfile="../data-transfer-service/build.xml" target="deployDataTransferService" inheritall="false"/>
 		<ant antfile="../physionet-analysis-service/build.xml" target="deployAnalysisService" inheritall="false"/>
 		<ant antfile="../waveform-support-service/build.xml" target="deployWaveformSupportService" inheritall="false"/>
+		<ant antfile="../qrs_score-analysis-service/build.xml" target="deployAnalysisService" inheritall="false"/>
 		
 	</target>
 		

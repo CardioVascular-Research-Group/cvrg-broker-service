@@ -15,7 +15,7 @@ import org.cvrgrid.philips.jaxb.beans.Leadmeasurements;
 import org.cvrgrid.philips.jaxb.beans.Orderinfo;
 import org.cvrgrid.philips.jaxb.beans.Restingecgdata;
 
-import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+import edu.jhu.cvrg.services.nodeConversionService.vo.AnnotationData;
 
 
 

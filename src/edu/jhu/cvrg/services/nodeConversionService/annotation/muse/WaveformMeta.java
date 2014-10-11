@@ -1,14 +1,10 @@
 package edu.jhu.cvrg.services.nodeConversionService.annotation.muse;
 
-import org.jdom.Element;
-import org.jdom.JDOMException;
-
-import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import org.jdom.Element;
 
 /**
  * This object will contain the element values for the Waveform tag in the MUSE XML.  The elements

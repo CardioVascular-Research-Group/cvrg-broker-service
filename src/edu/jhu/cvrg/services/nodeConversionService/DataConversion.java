@@ -15,13 +15,12 @@ import org.apache.axiom.om.OMFactory;
 import org.apache.axiom.om.OMNamespace;
 import org.apache.log4j.Logger;
 
-import edu.jhu.cvrg.dbapi.factory.Connection;
-import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
-import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
+import edu.jhu.cvrg.data.factory.Connection;
+import edu.jhu.cvrg.data.factory.ConnectionFactory;
 import edu.jhu.cvrg.services.brokerSvcUtils.BrokerSvcUtils;
+import edu.jhu.cvrg.services.nodeConversionService.vo.MetaContainer;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
-import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
 
 public class DataConversion {
 
@@ -742,22 +741,21 @@ public class DataConversion {
 			
 			Connection dbUtility = ConnectionFactory.createConnection();
 			
-			docId = dbUtility.storeDocument(Long.valueOf(metaData.getUserID()), groupId, companyId, metaData.getFileName(), metaData.getSubjectID(), metaData.getFileFormat(), 
+			docId = dbUtility.storeDocument(Long.valueOf(metaData.getUserID()), metaData.getFileName(), metaData.getSubjectID(), metaData.getFileFormat(), 
 											Double.valueOf(metaData.getSampFrequency()), metaData.getTreePath(), metaData.getChannels(), metaData.getNumberOfPoints(),
-											new GregorianCalendar(), metaData.getSubjectAge(), metaData.getSubjectGender(), null, conv.getAduGain(), metaData.getStudyID(), 
-											metaData.getFileSize(), metaData.getDatatype(), filesId);
+											new GregorianCalendar(), metaData.getSubjectAge(), metaData.getSubjectGender(), null, conv.getAduGain(), filesId);
 			
 			errorMessage = String.valueOf(docId);
+			
+			FileProccessThread newThread = new FileProccessThread(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, outputPath, conv, recordName, docId, Long.valueOf(metaData.getUserID()));
+			
+			newThread.start();
 			
 		} catch (Exception ex) {
 			errorMessage = "Error: " + ex.toString();
 			ex.printStackTrace();
 			return errorMessage;
 		}
-		
-		FileProccessThread newThread = new FileProccessThread(metaData, inputFormat, outputFormat, inputPath, groupId, folderId, companyId, outputPath, conv, recordName, docId, Long.valueOf(metaData.getUserID()));
-		
-		newThread.start();
 		
 		return errorMessage;
 	}

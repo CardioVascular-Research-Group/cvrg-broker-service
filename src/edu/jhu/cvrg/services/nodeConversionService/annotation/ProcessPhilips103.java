@@ -15,7 +15,7 @@ import org.sierraecg.schema.Leadmeasurements;
 import org.sierraecg.schema.Orderinfo;
 import org.sierraecg.schema.Restingecgdata;
 
-import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
+import edu.jhu.cvrg.services.nodeConversionService.vo.AnnotationData;
 
 
 /**

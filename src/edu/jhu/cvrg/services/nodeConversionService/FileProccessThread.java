@@ -5,24 +5,23 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.cvrg.dbapi.dto.AnnotationDTO;
-import edu.jhu.cvrg.dbapi.enums.EnumUploadState;
-import edu.jhu.cvrg.dbapi.factory.Connection;
-import edu.jhu.cvrg.dbapi.factory.ConnectionFactory;
-import edu.jhu.cvrg.dbapi.factory.exists.model.AnnotationData;
-import edu.jhu.cvrg.dbapi.factory.exists.model.MetaContainer;
+import edu.jhu.cvrg.data.dto.AnnotationDTO;
+import edu.jhu.cvrg.data.enums.UploadState;
+import edu.jhu.cvrg.data.factory.Connection;
+import edu.jhu.cvrg.data.factory.ConnectionFactory;
+import edu.jhu.cvrg.data.util.DataStorageException;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.MuseAnnotationReader;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips103;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessPhilips104;
 import edu.jhu.cvrg.services.nodeConversionService.annotation.ProcessSchiller;
+import edu.jhu.cvrg.services.nodeConversionService.vo.AnnotationData;
+import edu.jhu.cvrg.services.nodeConversionService.vo.MetaContainer;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter;
 import edu.jhu.icm.ecgFormatConverter.ECGformatConverter.fileFormat;
@@ -50,7 +49,7 @@ public class FileProccessThread extends Thread {
 	Logger log = Logger.getLogger(FileProccessThread.class);
 	
 	public FileProccessThread(MetaContainer metaData, fileFormat inputFormat,	fileFormat outputFormat, String inputPath, 
-							  long groupId, long folderId, long companyId, String outputPath, ECGformatConverter conv, String recordName, long docId, long userId) {
+							  long groupId, long folderId, long companyId, String outputPath, ECGformatConverter conv, String recordName, long docId, long userId) throws DataStorageException {
 		super();
 		this.metaData = metaData;
 		this.inputFormat = inputFormat;
@@ -74,7 +73,11 @@ public class FileProccessThread extends Thread {
 		try {
 			this.fileProccess();
 		} catch (Exception e) {
-			dbUtility.updateUploadStatus(docId, null, null, Boolean.FALSE, e.getMessage());
+			try {
+				dbUtility.updateUploadStatus(docId, null, null, Boolean.FALSE, e.getMessage());
+			} catch (DataStorageException e1) {
+				log.error(" " +e1.getMessage());
+			}
 		}
 	}
 	
@@ -99,7 +102,7 @@ public class FileProccessThread extends Thread {
 		
 		Boolean done = !(fileFormat.PHILIPS103.equals(inputFormat) || fileFormat.PHILIPS104.equals(inputFormat)  || fileFormat.SCHILLER.equals(inputFormat) || fileFormat.MUSEXML.equals(inputFormat));
 		
-		dbUtility.updateUploadStatus(docId, EnumUploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
+		dbUtility.updateUploadStatus(docId, UploadState.WRITE, writeTime, done ? Boolean.TRUE : null, null);
 
 		long  annotationTime = java.lang.System.currentTimeMillis();
 		
@@ -149,7 +152,7 @@ public class FileProccessThread extends Thread {
 			                                               
 			org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI ecgData = (org.cvrgrid.schiller.jaxb.beans.ComXiriuzSemaXmlSchillerEDISchillerEDI) conv.getComXiriuzSemaXmlSchillerEDISchillerEDI();
 			
-			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, metaData.getStudyID(), Long.valueOf(metaData.getUserID()), docId, metaData.getRecordName(), metaData.getSubjectID());
+			ProcessSchiller schillerAnn = new ProcessSchiller(ecgData, Long.valueOf(metaData.getUserID()), docId);
 			schillerAnn.populateAnnotations();
 			ArrayList<AnnotationDTO> orderList = schillerAnn.getExamdescriptInfo();
 			ArrayList<AnnotationDTO> dataList = schillerAnn.getPatDataInfo();
@@ -195,7 +198,7 @@ public class FileProccessThread extends Thread {
 		
 		annotationTime = java.lang.System.currentTimeMillis() - annotationTime;
 		log.info("["+docId+"]The runtime for analyse annotation and entering it into the database is = " + annotationTime + " milliseconds");
-		dbUtility.updateUploadStatus(docId, EnumUploadState.ANNOTATION, annotationTime, Boolean.TRUE, null);
+		dbUtility.updateUploadStatus(docId, UploadState.ANNOTATION, annotationTime, Boolean.TRUE, null);
 		
 		
 	}
@@ -268,7 +271,12 @@ public class FileProccessThread extends Thread {
 				 
 				annotationSet.add(annData);
 			}
-			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+			try {
+				success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+			} catch (DataStorageException e) {
+				log.error("Error on Annotation persistence. " + e.getMessage());
+				success = false;
+			}
 		}
 				
 		return success;
@@ -309,15 +317,19 @@ public class FileProccessThread extends Thread {
 					type = "COMMENT";
 				}
 				
-				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), groupId, companyId, docId, annData.getCreator(), type, annData.getConceptLabel(), 
+				ann = new AnnotationDTO(Long.valueOf(annData.getUserID()), docId, annData.getCreator(), type, annData.getConceptLabel(), 
 										annData.getConceptID() != null ? AnnotationDTO.ECG_TERMS_ONTOLOGY : null, annData.getConceptID(), annData.getConceptRestURL(),
 									    annData.getLeadIndex(), annData.getUnit(), annData.getComment(), annData.getAnnotation(), new GregorianCalendar(), annData.getMilliSecondStart(), 
-									    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd(), annData.getStudyID(), annData.getDatasetName(), annData.getSubjectID());
+									    annData.getMicroVoltStart(), annData.getMilliSecondEnd(), annData.getMicroVoltEnd());
 				 
 				annotationSet.add(ann);
 			}
-			
-			success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+			try{
+				success = annotationSet.size() == dbUtility.storeAnnotations(annotationSet);
+			} catch (DataStorageException e) {
+				log.error("Error on Annotation persistence. " + e.getMessage());
+				success = false;
+			}
 		}
 				
 		return success;
